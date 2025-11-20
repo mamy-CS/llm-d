@@ -136,12 +136,6 @@ replicaset.apps/ms-inference-scheduling-llm-d-modelservice-decode-8ff7fd5b8    2
 
 For instructions on getting started making inference requests see [our docs](../../docs/getting-started-inferencing.md)
 
-## Autoscaling with Workload Variant Autoscaler (WVA)
-
-The Workload Variant Autoscaler (WVA) provides dynamic autoscaling capabilities for llm-d inference deployments, automatically adjusting replica counts based on workload metrics and desired performance characteristics.
-
-For complete WVA installation, and configuration instructions, see the [WVA guide](./workload-variant-autoscaler/README.md).
-
 ## Cleanup
 
 To remove the deployment:
