@@ -23,7 +23,7 @@ Before installing WVA, ensure you have:
    - **GKE**: Google Cloud Managed Prometheus or automatic application monitoring should be enabled, (see [Google Cloud Managed Prometheus documentation](https://docs.cloud.google.com/stackdriver/docs/managed-prometheus))
    - **Other Kubernetes**: A Prometheus stack must be installed (see [monitoring documentation](../../docs/monitoring/README.md))
 
-3. **Prometheus Adapter**: Required for exposing custom metrics to Kubernetes HPA. This is installed automatically by the helmfile as part of the inference-scheduling stack.
+3. **Prometheus Adapter**: Required for exposing custom metrics to Kubernetes HPA. This is installed automatically by the helmfile as part of the workload-autoscaling installation.
 
 4. **Platform-specific certificates** (if required):
    - **OpenShift**: Prometheus CA certificate from `openshift-monitoring` namespace
@@ -31,7 +31,7 @@ Before installing WVA, ensure you have:
 
 ## Installation
 
-WVA is installed automatically as part of the base llm-d inference-scheduling stack. The helmfile will automatically install both prometheus-adapter and WVA from the published Helm repository when you deploy the inference-scheduling stack.
+WVA is installed as part of the workload-autoscaling guide, which includes the base llm-d inference-scheduling stack plus WVA and prometheus-adapter. The helmfile in `guides/workload-autoscaling/` will automatically install all components. 
 
 ### Step 1: Configure WVA Values
 
@@ -104,7 +104,9 @@ wva:
 
 ### Step 3: Create WVA Namespace (if needed)
 
-The helmfile will create the `workload-variant-autoscaler-system` namespace automatically. For OpenShift, you may need to create it with specific labels first:
+WVA is installed in its own dedicated namespace: `workload-variant-autoscaler-system`. The helmfile will create this namespace automatically when you run `helmfile apply`.
+
+For OpenShift, you may need to create it with specific labels first:
 
 ```bash
 # For OpenShift only - create namespace with monitoring label
@@ -112,23 +114,21 @@ kubectl create namespace workload-variant-autoscaler-system
 kubectl label namespace workload-variant-autoscaler-system openshift.io/user-monitoring=true
 ```
 
-For other platforms, the namespace will be created automatically by helmfile when you run `helmfile apply`.
+For other platforms, the namespace will be created automatically by helmfile.
 
 ### Step 4: Install Inference Scheduling Stack (includes WVA)
 
 Install the inference-scheduling stack, which includes WVA and prometheus-adapter:
 
 ```bash
-cd guides/inference-scheduling
-helmfile apply -n ${NAMESPACE}
+cd guides/workload-autoscaling
+helmfile apply -e wva -n ${NAMESPACE}
 ```
 
 This will install:
 - Base llm-d components (infra, gaie, modelservice)
 - `prometheus-adapter` in the monitoring namespace (for WVA custom metrics)
 - `workload-variant-autoscaler` in the `workload-variant-autoscaler-system` namespace
-
-The WVA Helm chart is published to the Helm repository `workload-autoscaling` and will be pulled automatically. The helmfile uses the values file at `workload-autoscaling/values.yaml` for configuration.
 
 ### Step 5: Verify Installation
 
@@ -198,7 +198,7 @@ To use a different model:
      name: "unsloth/Meta-Llama-3.1-8B"
    ```
 
-2. **Update WVA model configuration** (in `workload-variant-autoscaler/values.yaml`):
+2. **Update WVA model configuration** (in `workload-autoscaling/values.yaml`):
    ```yaml
    llmd:
      modelID: "unsloth/Meta-Llama-3.1-8B"
@@ -206,7 +206,7 @@ To use a different model:
 
 ### Accelerator Configuration
 
-Set the accelerator type in `workload-variant-autoscaler/values.yaml`:
+Set the accelerator type in `workload-autoscaling/values.yaml`:
 
 ```yaml
 va:
@@ -226,12 +226,12 @@ See the [WVA chart documentation](https://github.com/llm-d-incubation/workload-v
 To remove WVA:
 
 ```bash
-# Find the exact release name (includes release name postfix)
-helm ls -n ${NAMESPACE} | grep workload-variant-autoscaler
+# Find the exact release name
+helm ls -n workload-variant-autoscaler-system | grep workload-variant-autoscaler
 
 # Manual uninstall (replace with actual release name from above)
-# Default release name is: workload-variant-autoscaler-inference-scheduling
-helm uninstall workload-variant-autoscaler-inference-scheduling -n workload-variant-autoscaler-system
+# Default release name is: workload-variant-autoscaler
+helm uninstall workload-variant-autoscaler -n workload-variant-autoscaler-system
 
 # Delete namespace
 kubectl delete namespace workload-variant-autoscaler-system
@@ -241,8 +241,12 @@ kubectl delete namespace workload-variant-autoscaler-system
 ```
 
 **Important Notes**:
-- WVA is installed as part of the base inference-scheduling stack. The release name follows the pattern `workload-variant-autoscaler-{release_name_postfix}`.
-- To remove the entire inference-scheduling stack including WVA, use `helmfile destroy -n ${NAMESPACE}`.
-- The base llm-d installation will continue to operate without autoscaling after WVA removal.
-- Prometheus-adapter is installed as part of the stack for WVA. Consider whether it's needed by other components before uninstalling.
-
+- WVA is installed in its own dedicated namespace: `workload-variant-autoscaler-system`
+- The release name is `workload-variant-autoscaler`
+- To remove the entire workload-autoscaling stack including WVA, run from `guides/workload-autoscaling/`:
+  ```bash
+  cd guides/workload-autoscaling
+  helmfile destroy -e wva -n ${NAMESPACE}
+  ```
+- The base llm-d installation will continue to operate without autoscaling after WVA removal
+- Prometheus-adapter is installed as part of the stack for WVA. Consider whether it's needed by other components before uninstalling
