@@ -154,14 +154,14 @@ kubectl get pods -n ${MON_NS} -l app.kubernetes.io/name=prometheus-adapter
 
 ### Step 4: Create WVA Namespace (if needed)
 
-WVA is installed in its own dedicated namespace: `workload-variant-autoscaler-system`. The helmfile will create this namespace automatically when you run `helmfile apply`.
+WVA is installed in the `llm-d-autoscaler` namespace (same as the base llm-d installation). The helmfile will create this namespace automatically when you run `helmfile apply`.
 
 For OpenShift, you may need to create it with specific labels first:
 
 ```bash
 # For OpenShift only - create namespace with monitoring label
-kubectl create namespace workload-variant-autoscaler-system
-kubectl label namespace workload-variant-autoscaler-system openshift.io/user-monitoring=true
+kubectl create namespace llm-d-autoscaler
+kubectl label namespace llm-d-autoscaler openshift.io/user-monitoring=true
 ```
 
 For other platforms, the namespace will be created automatically by helmfile.
@@ -177,7 +177,7 @@ helmfile apply -e wva -n ${NAMESPACE}
 
 This will install:
 - Base llm-d components (infra, gaie, modelservice)
-- `workload-variant-autoscaler` in the `workload-variant-autoscaler-system` namespace
+- `workload-variant-autoscaler` in the `llm-d-autoscaler` namespace
 
 > **Note**: Prometheus Adapter must be installed separately as a dependency (see [Step 3](#step-3-install-prometheus-adapter-required-dependency)). It is not installed by this helmfile.
 
@@ -190,7 +190,7 @@ Check that all components are running:
 kubectl get pods -n ${MON_NS:-monitoring} -l app.kubernetes.io/name=prometheus-adapter
 
 # Check WVA controller
-kubectl get pods -n workload-variant-autoscaler-system
+kubectl get pods -n llm-d-autoscaler -l app.kubernetes.io/name=workload-variant-autoscaler
 
 # Verify WVA metrics are available via prometheus-adapter (after a few minutes)
 # This should return the metric exposed by WVA
@@ -278,14 +278,11 @@ To remove WVA:
 
 ```bash
 # Find the exact release name
-helm ls -n workload-variant-autoscaler-system | grep workload-variant-autoscaler
+helm ls -n llm-d-autoscaler | grep workload-variant-autoscaler
 
 # Manual uninstall (replace with actual release name from above)
 # Default release name is: workload-variant-autoscaler
-helm uninstall workload-variant-autoscaler -n workload-variant-autoscaler-system
-
-# Delete namespace
-kubectl delete namespace workload-variant-autoscaler-system
+helm uninstall workload-variant-autoscaler -n llm-d-autoscaler
 
 # Remove prometheus-adapter (installed separately as dependency)
 export MON_NS=${MON_NS:-monitoring}
@@ -293,7 +290,7 @@ helm uninstall prometheus-adapter -n ${MON_NS}
 ```
 
 **Important Notes**:
-- WVA is installed in its own dedicated namespace: `workload-variant-autoscaler-system`
+- WVA is installed in the `llm-d-autoscaler` namespace (same as the base llm-d installation)
 - The release name is `workload-variant-autoscaler`
 - To remove the entire workload-autoscaling stack including WVA, run from `guides/workload-autoscaling/`:
   ```bash
