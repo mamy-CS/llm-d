@@ -39,7 +39,7 @@ WVA is configured primarily through the values file at `workload-variant-autosca
 
 The default values file includes configuration for:
 - WVA controller settings (image, metrics, prometheus connection)
-- LLM-D integration (namespace, model ID)
+- llm-d integration (namespace, model ID)
 - Variant autoscaling settings (accelerator, SLOs)
 - HPA configuration
 - vLLM service settings
