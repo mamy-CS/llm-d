@@ -186,7 +186,29 @@ kubectl label namespace llm-d-autoscaler openshift.io/user-monitoring=true
 
 For other platforms, the namespace will be created automatically by helmfile.
 
-### Step 5: Install Inference Scheduling Stack (includes WVA)
+### Step 5: Install WVA CRDs (Required)
+
+The WVA chart includes CustomResourceDefinitions (CRDs) that must be installed before deploying the workload-variant-autoscaler. While Helm can install CRDs automatically, installing them explicitly ensures they are available before any resources that depend on them are created.
+
+Install the WVA CRD:
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/llm-d-incubation/workload-variant-autoscaler/refs/heads/main/charts/workload-variant-autoscaler/crds/llmd.ai_variantautoscalings.yaml
+```
+
+Verify the CRD is installed:
+
+```bash
+kubectl get crd variantautoscalings.llmd.ai
+```
+
+> **Note**: Alternatively, you can install the CRD using `helm show crds`:
+> ```bash
+> helm show crds oci://ghcr.io/llm-d-incubation/workload-variant-autoscaler/workload-variant-autoscaler --version <version> | kubectl apply -f -
+> ```
+> Replace `<version>` with the WVA chart version you plan to install (e.g., `0.0.4`).
+
+### Step 6: Install Inference Scheduling Stack (includes WVA)
 
 Install the inference-scheduling stack, which includes WVA:
 
@@ -201,7 +223,7 @@ This will install:
 
 > **Note**: Prometheus Adapter must be installed separately as a dependency (see [Step 3](#step-3-install-prometheus-adapter-required-dependency)). It is not installed by this helmfile.
 
-### Step 6: Verify Installation
+### Step 7: Verify Installation
 
 Check that all components are running:
 
