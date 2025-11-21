@@ -20,7 +20,7 @@ Before installing WVA, ensure you have:
 
 2. **Prometheus monitoring stack**: WVA requires Prometheus to be accessible for metric collection. The monitoring setup depends on your platform:
    - **OpenShift**: User Workload Monitoring should be enabled (see [OpenShift monitoring docs](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/monitoring/configuring-user-workload-monitoring))
-   - **GKE**: Google Cloud Managed Prometheus or automatic application monitoring should be enabled, (see [Google Cloud Managed Prometheus documentation](https://docs.cloud.google.com/stackdriver/docs/managed-prometheus))
+   - **GKE**: An in-cluster Prometheus instance is required (GMP does not expose HTTP API). See [GKE configuration](#gke) below for setup instructions.
    - **Other Kubernetes**: A Prometheus stack must be installed (see [monitoring documentation](../../docs/monitoring/README.md))
 
 3. **Prometheus Adapter**: Required for exposing WVA's external metric to Kubernetes autoscalers (HPA or KEDA). Prometheus Adapter must be installed separately as a dependency with WVA-specific configuration rules. It is not installed by the workload-autoscaling helmfile. See [Step 3: Install Prometheus Adapter](#step-3-install-prometheus-adapter-required-dependency) for installation instructions with the correct configuration from the [WVA repository](https://github.com/llm-d-incubation/workload-variant-autoscaler/tree/main/config/samples).
@@ -78,15 +78,33 @@ kubectl get secret thanos-querier-tls -n openshift-monitoring -o jsonpath='{.dat
 
 #### GKE
 
-For GKE deployments with Managed Prometheus:
+**Important**: Google Managed Prometheus (GMP) does not expose a Prometheus HTTP API endpoint. WVA requires an in-cluster Prometheus instance with HTTP API access.
+
+Deploy an in-cluster Prometheus (e.g., kube-prometheus-stack):
+
+```bash
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n monitoring --create-namespace
+```
+
+Configure WVA to use the in-cluster Prometheus endpoint:
 
 ```yaml
 wva:
   prometheus:
-    monitoringNamespace: gmp-system  # or your monitoring namespace
-    baseURL: "https://your-prometheus-endpoint"
+    monitoringNamespace: monitoring
+    baseURL: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
     tls:
-      insecureSkipVerify: true  # Adjust based on your setup
+      insecureSkipVerify: false
+```
+
+For prometheus-adapter (Step 3), use the same Prometheus endpoint in the values file:
+
+```yaml
+prometheus:
+  url: "http://prometheus-k8s.monitoring.svc.cluster.local"
+  port: 9090
 ```
 
 #### Other Kubernetes Platforms
@@ -127,10 +145,12 @@ curl -o /tmp/prometheus-adapter-values.yaml \
 
 # Update the prometheus URL in the values file to match your Prometheus endpoint
 # The downloaded config has platform-specific defaults that may need adjustment:
-# - prometheus.url: Update to your Prometheus service URL (e.g., http://prometheus.monitoring.svc.cluster.local)
+# - prometheus.url: Update to your Prometheus service URL
+#   * OpenShift: https://thanos-querier.openshift-monitoring.svc.cluster.local
+#   * GKE: http://prometheus-k8s.monitoring.svc.cluster.local (in-cluster Prometheus)
+#   * Other: http://prometheus.monitoring.svc.cluster.local
 # - prometheus.port: Update to your Prometheus service port (typically 9090)
 # The configuration includes essential rules to expose WVA's external metric
-# For OpenShift, the default points to thanos-querier; for other platforms, adjust as needed
 
 # Install prometheus-adapter with WVA-specific configuration
 helm upgrade -i prometheus-adapter prometheus-community/prometheus-adapter \
