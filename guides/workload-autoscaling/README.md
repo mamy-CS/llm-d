@@ -172,7 +172,7 @@ Install the inference-scheduling stack, which includes WVA:
 
 ```bash
 cd guides/workload-autoscaling
-helmfile apply -e wva -n ${NAMESPACE}
+helmfile apply -n ${NAMESPACE}
 ```
 
 This will install:
@@ -295,7 +295,7 @@ helm uninstall prometheus-adapter -n ${MON_NS}
 - To remove the entire workload-autoscaling stack including WVA, run from `guides/workload-autoscaling/`:
   ```bash
   cd guides/workload-autoscaling
-  helmfile destroy -e wva -n ${NAMESPACE}
+  helmfile destroy -n ${NAMESPACE}
   ```
 - The base llm-d installation will continue to operate without autoscaling after WVA removal
 - Prometheus-adapter is installed separately as a dependency. Uninstall it only if not needed by other components
