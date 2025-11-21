@@ -10,18 +10,18 @@ WVA integrates with llm-d to:
 - Reduce tail latency through intelligent scaling decisions
 - Support multiple accelerator types
 
-> **Note**: WVA currently supports only the [Intelligent Inference Scheduling](../README.md) well-lit path. Other well-lit paths (such as Prefill/Decode Disaggregation or Wide Expert-Parallelism) are not currently supported.
+> **Note**: WVA currently supports only the [Intelligent Inference Scheduling](../inference-scheduling/README.md) well-lit path. Other well-lit paths (such as Prefill/Decode Disaggregation or Wide Expert-Parallelism) are not currently supported.
 
 ## Prerequisites
 
 Before installing WVA, ensure you have:
 
-1. **llm-d base installation completed**: WVA requires the base llm-d [Intelligent Inference Scheduling](../README.md) well-lit path stack to be installed and running. Complete the [base installation](../README.md#installation) first.
+1. **llm-d base installation completed**: WVA requires the base llm-d [Intelligent Inference Scheduling](../inference-scheduling/README.md) well-lit path stack to be installed and running. Complete the [base installation](../inference-scheduling/README.md#installation) first.
 
 2. **Prometheus monitoring stack**: WVA requires Prometheus to be accessible for metric collection. The monitoring setup depends on your platform:
    - **OpenShift**: User Workload Monitoring should be enabled (see [OpenShift monitoring docs](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/monitoring/configuring-user-workload-monitoring))
    - **GKE**: Google Cloud Managed Prometheus or automatic application monitoring should be enabled, (see [Google Cloud Managed Prometheus documentation](https://docs.cloud.google.com/stackdriver/docs/managed-prometheus))
-   - **Other Kubernetes**: A Prometheus stack must be installed (see [monitoring documentation](../../../docs/monitoring/README.md))
+   - **Other Kubernetes**: A Prometheus stack must be installed (see [monitoring documentation](../../docs/monitoring/README.md))
 
 3. **Prometheus Adapter**: Required for exposing custom metrics to Kubernetes HPA. This is installed automatically by the helmfile as part of the inference-scheduling stack.
 
@@ -35,7 +35,7 @@ WVA is installed automatically as part of the base llm-d inference-scheduling st
 
 ### Step 1: Configure WVA Values
 
-WVA is configured primarily through the values file at `workload-variant-autoscaler/values.yaml`. You can customize WVA settings by editing this file.
+WVA is configured primarily through the values file at `workload-autoscaling/values.yaml`. You can customize WVA settings by editing this file.
 
 The default values file includes configuration for:
 - WVA controller settings (image, metrics, prometheus connection)
@@ -54,7 +54,7 @@ export NAMESPACE=llm-d-inference-scheduler  # Should match your base llm-d names
 
 ### Step 2: Platform-Specific Configuration
 
-Update `workload-variant-autoscaler/values.yaml` with platform-specific settings:
+Update `workload-autoscaling/values.yaml` with platform-specific settings:
 
 #### OpenShift
 
@@ -128,7 +128,7 @@ This will install:
 - `prometheus-adapter` in the monitoring namespace (for WVA custom metrics)
 - `workload-variant-autoscaler` in the `workload-variant-autoscaler-system` namespace
 
-The WVA Helm chart is published to the Helm repository `workload-autoscaling` and will be pulled automatically. The helmfile uses the values file at `workload-variant-autoscaler/values.yaml` for configuration.
+The WVA Helm chart is published to the Helm repository `workload-autoscaling` and will be pulled automatically. The helmfile uses the values file at `workload-autoscaling/values.yaml` for configuration.
 
 ### Step 5: Verify Installation
 
@@ -151,11 +151,11 @@ kubectl get variantautoscalings -n ${NAMESPACE}
 
 ## Configuration
 
-WVA is configured primarily through the values file at `guides/inference-scheduling/workload-variant-autoscaler/values.yaml`. The helmfile automatically uses this file when installing WVA.
+WVA is configured primarily through the values file at `workload-autoscaling/values.yaml`. The helmfile automatically uses this file when installing WVA.
 
 ### Primary Configuration: Values File
 
-Edit `workload-variant-autoscaler/values.yaml` to customize WVA settings:
+Edit `workload-autoscaling/values.yaml` to customize WVA settings:
 
 ```yaml
 llmd:
