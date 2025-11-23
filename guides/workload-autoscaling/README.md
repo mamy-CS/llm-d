@@ -21,12 +21,10 @@ Before installing WVA, ensure you have:
 2. **Prometheus monitoring stack**: WVA requires Prometheus to be accessible for metric collection. **WVA requires HTTPS connections to Prometheus** - HTTP-only Prometheus will cause WVA to fail. The monitoring setup depends on your platform:
    - **OpenShift**: User Workload Monitoring should be enabled (see [OpenShift monitoring docs](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/monitoring/configuring-user-workload-monitoring))
    - **GKE**: An in-cluster Prometheus instance is required (GMP does not expose HTTP API). See [GKE configuration](#gke) below for setup instructions.
-   - **Kind/Minikube**: Prometheus must be configured with TLS/HTTPS. Default HTTP-only Prometheus will not work with WVA. See [Kind/Minikube configuration](#other-kubernetes-platforms-kind-minikube-etc) below.
+   - **Kind/Minikube**: Install Prometheus with TLS/HTTPS configuration. See [Kind/Minikube configuration](#other-kubernetes-platforms-kind-minikube-etc) below for installation and TLS setup instructions.
    - **Other Kubernetes**: A Prometheus stack must be installed with HTTPS support (see [monitoring documentation](../../docs/monitoring/README.md))
 
-3. **Prometheus Adapter**: Required for exposing WVA's external metric to Kubernetes autoscalers (HPA or KEDA). Prometheus Adapter must be installed separately as a dependency with WVA-specific configuration rules. It is not installed by the workload-autoscaling helmfile. See [Step 3: Install Prometheus Adapter](#step-3-install-prometheus-adapter-required-dependency) for installation instructions with the correct configuration from the [WVA repository](https://github.com/llm-d-incubation/workload-variant-autoscaler/tree/main/config/samples).
-
-4. **HuggingFace token secret**: The model service requires a Kubernetes secret named `llm-d-hf-token` in your target namespace with the key `HF_TOKEN` containing a valid HuggingFace token to pull models. Create the namespace and secret before running `helmfile apply` (Step 6):
+3. **HuggingFace token secret**: The model service requires a Kubernetes secret named `llm-d-hf-token` in your target namespace with the key `HF_TOKEN` containing a valid HuggingFace token to pull models. Create the namespace and secret before running `helmfile apply` (Step 6):
    ```bash
    export HF_TOKEN=<your-huggingface-token>
    export NAMESPACE=llm-d-autoscaler  # or your target namespace
@@ -72,7 +70,7 @@ wva:
       caCertPath: "/etc/ssl/certs/prometheus-ca.crt"
 ```
 
-Extract CA cert: `kubectl get secret thanos-querier-tls -n openshift-monitoring -o jsonpath='{.data.tls\.crt}' | base64 -d > /tmp/prometheus-ca.crt`
+Extract CA cert: `kubectl get secret thanos-querier-tls -n openshift-monitoring -o jsonpath='{.data.tls\.crt}' | base64 -d > ${TMPDIR:-/tmp}/prometheus-ca.crt`
 
 #### GKE
 
@@ -97,9 +95,19 @@ wva:
 
 #### Other Kubernetes Platforms (Kind, Minikube, etc.)
 
-> **WVA HTTPS Requirement**: WVA **requires** HTTPS for Prometheus connections. The default Prometheus installation on Kind/Minikube uses HTTP only. You **must** configure Prometheus with TLS.
+> **WVA HTTPS Requirement**: WVA **requires** HTTPS for Prometheus connections. The default Prometheus installation on Kind/Minikube uses HTTP only. You **must** install Prometheus and configure it with TLS.
 
-For self-managed Prometheus installations on kind or other Kubernetes platforms:
+**Install Prometheus**:
+
+```bash
+export MON_NS=llm-d-monitoring
+
+# Install Prometheus stack
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts && helm repo update
+helm install llmd prometheus-community/kube-prometheus-stack -n ${MON_NS} --create-namespace
+```
+
+**Configure WVA values**:
 
 ```yaml
 wva:
@@ -111,21 +119,21 @@ wva:
       caCertPath: ""  # Leave empty when using insecureSkipVerify
 ```
 
-**Enabling TLS on Prometheus for Kind** (Required):
+**Enable TLS on Prometheus** (Required):
 
-WVA requires HTTPS for Prometheus. For Kind clusters, configure Prometheus with TLS:
+WVA requires HTTPS for Prometheus. Configure Prometheus with TLS:
 
 ```bash
 export MON_NS=llm-d-monitoring
 
 # Create self-signed TLS certificate
 openssl req -x509 -newkey rsa:2048 -nodes \
-  -keyout /tmp/prometheus-tls.key -out /tmp/prometheus-tls.crt -days 365 \
+  -keyout ${TMPDIR:-/tmp}/prometheus-tls.key -out ${TMPDIR:-/tmp}/prometheus-tls.crt -days 365 \
   -subj "/CN=prometheus" \
   -addext "subjectAltName=DNS:llmd-kube-prometheus-stack-prometheus.${MON_NS}.svc.cluster.local,DNS:llmd-kube-prometheus-stack-prometheus.${MON_NS}.svc,DNS:prometheus,DNS:localhost"
 
 # Create TLS secret and upgrade Prometheus
-kubectl create secret tls prometheus-web-tls --cert=/tmp/prometheus-tls.crt --key=/tmp/prometheus-tls.key -n ${MON_NS} --dry-run=client -o yaml | kubectl apply -f -
+kubectl create secret tls prometheus-web-tls --cert=${TMPDIR:-/tmp}/prometheus-tls.crt --key=${TMPDIR:-/tmp}/prometheus-tls.key -n ${MON_NS} --dry-run=client -o yaml | kubectl apply -f -
 
 helm upgrade llmd prometheus-community/kube-prometheus-stack -n ${MON_NS} \
   --set prometheus.prometheusSpec.web.tlsConfig.cert.secret.name=prometheus-web-tls \
@@ -139,52 +147,76 @@ helm upgrade llmd prometheus-community/kube-prometheus-stack -n ${MON_NS} \
 
 ### Step 3: Install Prometheus Adapter (Required Dependency)
 
-Prometheus Adapter exposes WVA's external metric to HPA/KEDA. Install **after** Prometheus TLS configuration (Step 2) with platform-specific settings:
+Prometheus Adapter exposes WVA's external metric to HPA/KEDA. Install **after** Prometheus TLS configuration (Step 2).
+
+Choose your platform and follow the corresponding section:
+
+#### 3.1: OpenShift
 
 ```bash
-# Common setup
+# Setup
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
 export MON_NS=${MON_NS:-llm-d-monitoring}
 
-# Download platform-specific values
-# OpenShift:
-curl -o /tmp/prometheus-adapter-values.yaml \
-  https://raw.githubusercontent.com/llm-d-incubation/workload-variant-autoscaler/main/config/samples/prometheus-adapter-values-ocp.yaml
-PROM_URL="https://thanos-querier.openshift-monitoring.svc.cluster.local"
-
-# Other platforms (GKE/Generic):
-# curl -o /tmp/prometheus-adapter-values.yaml \
-#   https://raw.githubusercontent.com/llm-d-incubation/workload-variant-autoscaler/main/config/samples/prometheus-adapter-values.yaml
-# PROM_URL="http://llmd-kube-prometheus-stack-prometheus.${MON_NS}.svc.cluster.local:9090"
+# Download OpenShift-specific values
+curl -o ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml \
+  https://raw.githubusercontent.com/llm-d-incubation/workload-variant-autoscaler/v0.0.5/config/samples/prometheus-adapter-values-ocp.yaml
 
 # Update Prometheus URL
-sed -i.bak "s|url:.*|url: ${PROM_URL}|" /tmp/prometheus-adapter-values.yaml || \
-  echo "Manually edit /tmp/prometheus-adapter-values.yaml to set prometheus.url"
+sed -i.bak "s|url:.*|url: https://thanos-querier.openshift-monitoring.svc.cluster.local|" ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml || \
+  echo "Manually edit ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml to set prometheus.url"
 
 # Install
 helm upgrade -i prometheus-adapter prometheus-community/prometheus-adapter \
-  --version 4.0.1 -n ${MON_NS} --create-namespace -f /tmp/prometheus-adapter-values.yaml
+  --version 4.0.1 -n ${MON_NS} --create-namespace -f ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml
 ```
 
-**For Kind/HTTPS Prometheus**: Configure CA certificate before installation:
+#### 3.2: GKE/Generic Kubernetes
 
 ```bash
+# Setup
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
 export MON_NS=${MON_NS:-llm-d-monitoring}
 
-# Extract CA cert and create ConfigMap
-kubectl get secret prometheus-web-tls -n ${MON_NS} -o jsonpath='{.data.tls\.crt}' | base64 -d > /tmp/prometheus-ca.crt
-kubectl create configmap prometheus-ca -n ${MON_NS} --from-file=ca.crt=/tmp/prometheus-ca.crt --dry-run=client -o yaml | kubectl apply -f -
+# Download values
+curl -o ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml \
+  https://raw.githubusercontent.com/llm-d-incubation/workload-variant-autoscaler/v0.0.5/config/samples/prometheus-adapter-values.yaml
 
-# Download and configure values with CA cert
-curl -o /tmp/prometheus-adapter-values.yaml \
-  https://raw.githubusercontent.com/llm-d-incubation/workload-variant-autoscaler/main/config/samples/prometheus-adapter-values.yaml
+# Update Prometheus URL
+sed -i.bak "s|url:.*|url: http://llmd-kube-prometheus-stack-prometheus.${MON_NS}.svc.cluster.local:9090|" ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml || \
+  echo "Manually edit ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml to set prometheus.url"
 
-cat >> /tmp/prometheus-adapter-values.yaml <<EOF
+# Install
+helm upgrade -i prometheus-adapter prometheus-community/prometheus-adapter \
+  --version 4.0.1 -n ${MON_NS} --create-namespace -f ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml
+```
+
+#### 3.3: Kind/HTTPS Prometheus
+
+For Kind clusters with HTTPS Prometheus (configured in Step 2), configure CA certificate **before** installation:
+
+```bash
+# Setup
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+export MON_NS=${MON_NS:-llm-d-monitoring}
+
+# Extract CA cert and create ConfigMap (required before installation)
+kubectl get secret prometheus-web-tls -n ${MON_NS} -o jsonpath='{.data.tls\.crt}' | base64 -d > ${TMPDIR:-/tmp}/prometheus-ca.crt
+kubectl create configmap prometheus-ca -n ${MON_NS} --from-file=ca.crt=${TMPDIR:-/tmp}/prometheus-ca.crt --dry-run=client -o yaml | kubectl apply -f -
+
+# Download values
+curl -o ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml \
+  https://raw.githubusercontent.com/llm-d-incubation/workload-variant-autoscaler/v0.0.5/config/samples/prometheus-adapter-values.yaml
+
+# Configure values with CA cert
+cat >> ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml <<EOF
 prometheus:
   url: https://llmd-kube-prometheus-stack-prometheus.${MON_NS}.svc.cluster.local
   port: 9090
-extraArgs:
+extraArguments:
   - --prometheus-ca-file=/etc/ssl/certs/prometheus-ca.crt
 extraVolumeMounts:
   - name: prometheus-ca
@@ -197,15 +229,18 @@ extraVolumes:
       name: prometheus-ca
 EOF
 
+# Install
 helm upgrade -i prometheus-adapter prometheus-community/prometheus-adapter \
-  --version 4.0.1 -n ${MON_NS} --create-namespace -f /tmp/prometheus-adapter-values.yaml
+  --version 4.0.1 -n ${MON_NS} --create-namespace -f ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml
 ```
 
-Verify: `kubectl get pods -n ${MON_NS} -l app.kubernetes.io/name=prometheus-adapter` and test external metrics API.
+**Verify installation**: `kubectl get pods -n ${MON_NS} -l app.kubernetes.io/name=prometheus-adapter` and test external metrics API.
 
 ### Step 4: Create WVA Namespace (if needed)
 
-The helmfile creates `llm-d-autoscaler` namespace automatically if it doesn't exist. **Note:** If you created the namespace in Prerequisites #4 for the HF token secret, it's already created. For OpenShift only, ensure it has the monitoring label:
+The helmfile creates `llm-d-autoscaler` namespace automatically if it doesn't exist. **Note:** If you created the namespace in Prerequisites #4 for the HF token secret, it's already created.
+
+**For OpenShift only**, ensure the namespace has the monitoring label:
 
 ```bash
 export NAMESPACE=${NAMESPACE:-llm-d-autoscaler}
@@ -217,7 +252,7 @@ kubectl label namespace "${NAMESPACE}" openshift.io/user-monitoring=true --overw
 Install WVA CRDs before deploying:
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/llm-d-incubation/workload-variant-autoscaler/refs/heads/main/charts/workload-variant-autoscaler/crds/llmd.ai_variantautoscalings.yaml
+kubectl apply -f https://raw.githubusercontent.com/llm-d-incubation/workload-variant-autoscaler/v0.0.5/charts/workload-variant-autoscaler/crds/llmd.ai_variantautoscalings.yaml
 kubectl get crd variantautoscalings.llmd.ai
 ```
 
@@ -282,7 +317,7 @@ wva:
       insecureSkipVerify: true
 ```
 
-See [WVA chart documentation](https://github.com/llm-d-incubation/workload-variant-autoscaler/blob/main/charts/workload-variant-autoscaler/README.md) for all options.
+See [WVA chart documentation](https://github.com/llm-d-incubation/workload-variant-autoscaler/blob/v0.0.5/charts/workload-variant-autoscaler/README.md) for all options.
 
 ## Cleanup
 
