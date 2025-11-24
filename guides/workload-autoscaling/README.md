@@ -15,15 +15,20 @@ WVA integrates with llm-d to:
 
 Before installing WVA, ensure you have:
 
-1. **Gateway control plane**: Configure and deploy your [Gateway control plane](../prereq/gateway-provider/README.md) (Istio) before installation.
+1. **Kubernetes cluster**: A running Kubernetes cluster (v1.29+). If you need to set up a local cluster:
+   - **Kind**: For Kind clusters with GPU emulation, use the [WVA Kind setup script](https://github.com/llm-d-incubation/workload-variant-autoscaler/blob/v0.0.5/deploy/kind-emulator/setup.sh) which creates a cluster and patches nodes with GPU capacity required for WVA scaling. See [Infrastructure Prerequisites](../prereq/infrastructure/README.md) for other cluster setup options.
+   - **Minikube**: See [Minikube setup documentation](../../docs/infra-providers/minikube/README.md) for single-host development.
+   - **Production clusters**: See [Infrastructure Prerequisites](../prereq/infrastructure/README.md) for provider-specific setup (GKE, AKS, OpenShift, etc.).
 
-2. **Prometheus monitoring stack**: WVA requires Prometheus to be accessible for metric collection. **WVA requires HTTPS connections to Prometheus**. The monitoring setup depends on your platform:
+2. **Gateway control plane**: Configure and deploy your [Gateway control plane](../prereq/gateway-provider/README.md) (Istio) before installation.
+
+3. **Prometheus monitoring stack**: WVA requires Prometheus to be accessible for metric collection. **WVA requires HTTPS connections to Prometheus**. The monitoring setup depends on your platform:
    - **OpenShift**: User Workload Monitoring should be enabled (see [OpenShift monitoring docs](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/monitoring/configuring-user-workload-monitoring))
    - **GKE**: An in-cluster Prometheus instance is required (GMP does not expose HTTP API). See [GKE configuration](#gke) below for setup instructions.
    - **Kind/Minikube**: Install Prometheus with TLS/HTTPS configuration. See [Kind/Minikube configuration](#other-kubernetes-platforms-kind-minikube-etc) below for installation and TLS setup instructions.
    - **Other Kubernetes**: A Prometheus stack must be installed with HTTPS support (see [monitoring documentation](../../docs/monitoring/README.md))
 
-3. **HuggingFace token secret**: The model service requires a Kubernetes secret named `llm-d-hf-token` in your target namespace with the key `HF_TOKEN` containing a valid HuggingFace token to pull models. Create the namespace and secret before running `helmfile apply` (Step 6):
+4. **HuggingFace token secret**: The model service requires a Kubernetes secret named `llm-d-hf-token` in your target namespace with the key `HF_TOKEN` containing a valid HuggingFace token to pull models. Create the namespace and secret before running `helmfile apply` (Step 6):
    ```bash
    export HF_TOKEN=<your-huggingface-token>
    export NAMESPACE=llm-d-autoscaler  # or your target namespace
