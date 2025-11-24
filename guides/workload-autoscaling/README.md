@@ -1,6 +1,6 @@
 # Autoscaling with Workload Variant Autoscaler (WVA)
 
-The [Workload Variant Autoscaler](https://github.com/llm-d-incubation/workload-variant-autoscaler/tree/v0.0.5) (WVA) provides dynamic autoscaling capabilities for llm-d inference deployments, automatically adjusting replica counts based on workload metrics and desired performance characteristics.
+The [Workload Variant Autoscaler](https://github.com/llm-d-incubation/workload-variant-autoscaler/tree/v0.0.5) (WVA) provides dynamic autoscaling capabilities for llm-d inference deployments, automatically adjusting replica counts based on inference server saturation.
 
 ## Overview
 
@@ -8,7 +8,6 @@ WVA integrates with llm-d to:
 - Dynamically scale inference replicas based on workload saturation
 - Optimize resource utilization by adjusting to traffic patterns
 - Reduce tail latency through saturation-based scaling decisions
-- Support multiple accelerator types
 
 > **Note**: WVA currently supports only the [Intelligent Inference Scheduling](../inference-scheduling/README.md) well-lit path. Other well-lit paths (such as Prefill/Decode Disaggregation or Wide Expert-Parallelism) are not currently supported.
 
@@ -18,7 +17,7 @@ Before installing WVA, ensure you have:
 
 1. **Gateway control plane**: Configure and deploy your [Gateway control plane](../prereq/gateway-provider/README.md) (Istio) before installation.
 
-2. **Prometheus monitoring stack**: WVA requires Prometheus to be accessible for metric collection. **WVA requires HTTPS connections to Prometheus** - HTTP-only Prometheus will cause WVA to fail. The monitoring setup depends on your platform:
+2. **Prometheus monitoring stack**: WVA requires Prometheus to be accessible for metric collection. **WVA requires HTTPS connections to Prometheus**. The monitoring setup depends on your platform:
    - **OpenShift**: User Workload Monitoring should be enabled (see [OpenShift monitoring docs](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/monitoring/configuring-user-workload-monitoring))
    - **GKE**: An in-cluster Prometheus instance is required (GMP does not expose HTTP API). See [GKE configuration](#gke) below for setup instructions.
    - **Kind/Minikube**: Install Prometheus with TLS/HTTPS configuration. See [Kind/Minikube configuration](#other-kubernetes-platforms-kind-minikube-etc) below for installation and TLS setup instructions.
@@ -66,8 +65,8 @@ wva:
     monitoringNamespace: openshift-user-workload-monitoring
     baseURL: "https://thanos-querier.openshift-monitoring.svc.cluster.local:9091"
     tls:
-      insecureSkipVerify: false
-      caCertPath: "/etc/ssl/certs/prometheus-ca.crt"
+      insecureSkipVerify: true # or "false" for production
+      caCertPath: "" # or set ca cert path for production - "/etc/ssl/certs/prometheus-ca.crt" 
 ```
 
 Extract CA cert: `kubectl get secret thanos-querier-tls -n openshift-monitoring -o jsonpath='{.data.tls\.crt}' | base64 -d > ${TMPDIR:-/tmp}/prometheus-ca.crt`
@@ -157,7 +156,7 @@ Choose your platform and follow the corresponding section:
 # Setup
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
-export MON_NS=${MON_NS:-llm-d-monitoring}
+export MON_NS=openshift-user-workload-monitoring
 
 # Download OpenShift-specific values
 curl -o ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml \
@@ -165,7 +164,7 @@ curl -o ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml \
 
 # Update Prometheus URL
 sed -i.bak "s|url:.*|url: https://thanos-querier.openshift-monitoring.svc.cluster.local|" ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml || \
-  echo "Manually edit ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml to set prometheus.url"
+  echo "Edit ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml to set prometheus.url"
 
 # Install
 helm upgrade -i prometheus-adapter prometheus-community/prometheus-adapter \
@@ -186,7 +185,7 @@ curl -o ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml \
 
 # Update Prometheus URL
 sed -i.bak "s|url:.*|url: http://llmd-kube-prometheus-stack-prometheus.${MON_NS}.svc.cluster.local:9090|" ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml || \
-  echo "Manually edit ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml to set prometheus.url"
+  echo "Edit ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml to set prometheus.url"
 
 # Install
 helm upgrade -i prometheus-adapter prometheus-community/prometheus-adapter \
@@ -304,8 +303,6 @@ llmd:
 ```yaml
 va:
   accelerator: L40S
-  sloTpot: 10    # Time per output token SLO (ms)
-  sloTtft: 1000  # Time to first token SLO (ms)
 ```
 
 **Prometheus** (platform-specific):
