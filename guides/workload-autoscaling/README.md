@@ -1,13 +1,13 @@
 # Autoscaling with Workload Variant Autoscaler (WVA)
 
-The [Workload Variant Autoscaler](https://github.com/llm-d-incubation/workload-variant-autoscaler) (WVA) provides dynamic autoscaling capabilities for llm-d inference deployments, automatically adjusting replica counts based on workload metrics and desired performance characteristics.
+The [Workload Variant Autoscaler](https://github.com/llm-d-incubation/workload-variant-autoscaler/tree/v0.0.5) (WVA) provides dynamic autoscaling capabilities for llm-d inference deployments, automatically adjusting replica counts based on workload metrics and desired performance characteristics.
 
 ## Overview
 
 WVA integrates with llm-d to:
-- Dynamically scale inference replicas based on workload metrics
+- Dynamically scale inference replicas based on workload saturation
 - Optimize resource utilization by adjusting to traffic patterns
-- Reduce tail latency through intelligent scaling decisions
+- Reduce tail latency through saturation-based scaling decisions
 - Support multiple accelerator types
 
 > **Note**: WVA currently supports only the [Intelligent Inference Scheduling](../inference-scheduling/README.md) well-lit path. Other well-lit paths (such as Prefill/Decode Disaggregation or Wide Expert-Parallelism) are not currently supported.
@@ -143,7 +143,7 @@ helm upgrade llmd prometheus-community/kube-prometheus-stack -n ${MON_NS} \
   --reuse-values
 ```
 
-> **Note**: For Kind clusters, consider using [simulated-accelerators](../simulated-accelerators/README.md) if vLLM GPU detection fails. WVA automatically discovers its namespace via `POD_NAMESPACE`.
+> **Note**: For Kind clusters, consider using [simulated-accelerators](../simulated-accelerators/README.md). **For WVA scaling to work properly with the simulator, you must patch nodes with fake GPU capacity** (e.g., `kubectl patch node <node-name> -p '{"status":{"capacity":{"nvidia.com/gpu":"8"}}}'`). If using regular vLLM with GPU resource requests on Kind, you must patch nodes for pods to schedule. WVA automatically discovers its namespace via `POD_NAMESPACE`.
 
 ### Step 3: Install Prometheus Adapter (Required Dependency)
 
@@ -261,6 +261,7 @@ kubectl get crd variantautoscalings.llmd.ai
 Install the complete llm-d inference-scheduling stack (infra, gaie, modelservice) plus WVA:
 
 ```bash
+export NAMESPACE=${NAMESPACE:-llm-d-autoscaler}
 cd guides/workload-autoscaling
 helmfile apply -n ${NAMESPACE}
 ```
