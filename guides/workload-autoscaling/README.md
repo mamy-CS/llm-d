@@ -15,10 +15,10 @@ WVA integrates with llm-d to:
 
 Before installing WVA, ensure you have:
 
-1. **Kubernetes cluster**: A running Kubernetes cluster (v1.29+). If you need to set up a local cluster:
+1. **Kubernetes cluster**: A running Kubernetes cluster (v1.31+). If you need to set up a local cluster:
    - **Kind**: For Kind clusters with GPU emulation, use the [WVA Kind setup script](https://github.com/llm-d-incubation/workload-variant-autoscaler/blob/v0.0.5/deploy/kind-emulator/setup.sh) which creates a cluster and patches nodes with GPU capacity required for WVA scaling. See [Infrastructure Prerequisites](../prereq/infrastructure/README.md) for other cluster setup options.
    - **Minikube**: See [Minikube setup documentation](../../docs/infra-providers/minikube/README.md) for single-host development.
-   - **Production clusters**: See [Infrastructure Prerequisites](../prereq/infrastructure/README.md) for provider-specific setup (GKE, AKS, OpenShift, etc.).
+   - **Production clusters**: See [Infrastructure Prerequisites](../prereq/infrastructure/README.md) for provider-specific setup (GKE, AKS, OpenShift (4.18+), etc.).
 
 2. **Gateway control plane**: Configure and deploy your [Gateway control plane](../prereq/gateway-provider/README.md) (Istio) before installation.
 
