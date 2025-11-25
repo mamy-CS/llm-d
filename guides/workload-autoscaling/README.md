@@ -174,6 +174,27 @@ sed -i.bak "s|url:.*|url: https://thanos-querier.openshift-monitoring.svc.cluste
 # Install
 helm upgrade -i prometheus-adapter prometheus-community/prometheus-adapter \
   --version 4.0.1 -n ${MON_NS} --create-namespace -f ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml
+
+# Verify RBAC permissions
+kubectl auth can-i --list --as=system:serviceaccount:${MON_NS}:prometheus-adapter | grep -E "monitoring.coreos.com|prometheuses|namespaces"
+
+# Create ClusterRole for Prometheus API access if needed
+kubectl apply -f - <<'YAML'
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: allow-thanos-querier-api-access
+rules:
+- nonResourceURLs: [/api/v1/query, /api/v1/query_range, /api/v1/labels, /api/v1/label/*/values, /api/v1/series, /api/v1/metadata, /api/v1/rules, /api/v1/alerts]
+  verbs: [get]
+- apiGroups: [monitoring.coreos.com]
+  resourceNames: [k8s]
+  resources: [prometheuses/api]
+  verbs: [get, create, update]
+- apiGroups: [""]
+  resources: [namespaces]
+  verbs: [get]
+YAML
 ```
 
 #### 3.2: GKE/Generic Kubernetes
