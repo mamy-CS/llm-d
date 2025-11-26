@@ -256,7 +256,7 @@ EOF
 
 # Install
 helm upgrade -i prometheus-adapter prometheus-community/prometheus-adapter \
-  --version 4.0.1 -n ${MON_NS} --create-namespace -f ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml
+  --version 5.2.0 -n ${MON_NS} --create-namespace -f ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml
 ```
 
 **Verify installation**: `kubectl get pods -n ${MON_NS} -l app.kubernetes.io/name=prometheus-adapter` and test external metrics API.
