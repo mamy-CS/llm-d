@@ -215,7 +215,7 @@ sed -i.bak "s|url:.*|url: http://llmd-kube-prometheus-stack-prometheus.${MON_NS}
 
 # Install
 helm upgrade -i prometheus-adapter prometheus-community/prometheus-adapter \
-  --version 4.0.1 -n ${MON_NS} --create-namespace -f ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml
+  --version 5.2.0 -n ${MON_NS} --create-namespace -f ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml
 ```
 
 #### 3.3: Kind/HTTPS Prometheus
