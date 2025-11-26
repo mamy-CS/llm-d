@@ -46,7 +46,7 @@ Before installing WVA, ensure you have:
 
 ## Installation
 
-The workload-autoscaling helmfile installs the complete llm-d [Intelligent Inference Scheduling](../inference-scheduling/README.md) stack (infra, gaie, modelservice) plus WVA in a single `helmfile apply` command. **Install Prometheus Adapter separately in [Step 3](#step-3-install-prometheus-adapter-required-dependency) before running helmfile apply.** 
+The workload-autoscaling helmfile installs the complete llm-d [Intelligent Inference Scheduling](../inference-scheduling/README.md) stack (infra, gaie, modelservice) plus WVA in a single `helmfile apply` command. **Install Prometheus Adapter separately in [Step 6](#step-6-install-prometheus-adapter-required-dependency) after WVA installation.** 
 
 ### Step 1: Configure WVA Values
 
@@ -69,12 +69,13 @@ wva:
   prometheus:
     monitoringNamespace: openshift-user-workload-monitoring
     baseURL: "https://thanos-querier.openshift-monitoring.svc.cluster.local:9091"
+    serviceAccountName: "prometheus-k8s"
     tls:
       insecureSkipVerify: true # or "false" for production
       caCertPath: "" # or set ca cert path for production - "/etc/ssl/certs/prometheus-ca.crt" 
 ```
 
-Extract CA cert: `kubectl get secret thanos-querier-tls -n openshift-monitoring -o jsonpath='{.data.tls\.crt}' | base64 -d > ${TMPDIR:-/tmp}/prometheus-ca.crt`
+Extract CA cert (if required): `kubectl get secret thanos-querier-tls -n openshift-monitoring -o jsonpath='{.data.tls\.crt}' | base64 -d > ${TMPDIR:-/tmp}/prometheus-ca.crt`
 
 #### GKE
 
@@ -111,18 +112,6 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 helm install llmd prometheus-community/kube-prometheus-stack -n ${MON_NS} --create-namespace
 ```
 
-**Configure WVA values**:
-
-```yaml
-wva:
-  prometheus:
-    monitoringNamespace: llm-d-monitoring  # Default monitoring namespace for llm-d
-    baseURL: "https://llmd-kube-prometheus-stack-prometheus.llm-d-monitoring.svc.cluster.local:9090"  # MUST use https://
-    tls:
-      insecureSkipVerify: true  # Set to true for self-signed certificates
-      caCertPath: ""  # Leave empty when using insecureSkipVerify
-```
-
 **Enable TLS on Prometheus** (Required):
 
 WVA requires HTTPS for Prometheus. Configure Prometheus with TLS:
@@ -149,13 +138,51 @@ helm upgrade llmd prometheus-community/kube-prometheus-stack -n ${MON_NS} \
 
 > **Note**: For Kind clusters, consider using [simulated-accelerators](../simulated-accelerators/README.md) if vLLM GPU detection fails. **Saturation-based scaling does not require node patching**—it only uses workload metrics (KV cache utilization, queue length). Simulator pods don't request GPUs, so they can schedule without node patching. If using regular vLLM with GPU resource requests on Kind, you must patch nodes for pods to schedule (e.g., `kubectl patch node <node-name> -p '{"status":{"capacity":{"nvidia.com/gpu":"8"}}}'`). WVA automatically discovers its namespace via `POD_NAMESPACE`.
 
-### Step 3: Install Prometheus Adapter (Required Dependency)
+### Step 3: Create WVA Namespace (if needed)
 
-Prometheus Adapter exposes WVA's external metric to HPA/KEDA. Install **after** Prometheus TLS configuration (Step 2).
+The helmfile creates `llm-d-autoscaler` namespace automatically if it doesn't exist. **Note:** If you created the namespace in Prerequisites #4 for the HF token secret, it's already created.
+
+**For OpenShift only**, ensure the namespace has the monitoring label:
+
+```bash
+export NAMESPACE=${NAMESPACE:-llm-d-autoscaler}
+kubectl label namespace "${NAMESPACE}" openshift.io/user-monitoring=true --overwrite
+```
+
+### Step 4: Install WVA CRDs (Required)
+
+Install WVA CRDs before deploying:
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/llm-d-incubation/workload-variant-autoscaler/v0.0.5/charts/workload-variant-autoscaler/crds/llmd.ai_variantautoscalings.yaml
+kubectl get crd variantautoscalings.llmd.ai
+```
+
+### Step 5: Install llm-d Stack with WVA
+
+Install the complete llm-d inference-scheduling stack (infra, gaie, modelservice) plus WVA:
+
+```bash
+export NAMESPACE=${NAMESPACE:-llm-d-autoscaler}
+cd guides/workload-autoscaling
+helmfile apply -n ${NAMESPACE}
+```
+
+This installs the complete [Intelligent Inference Scheduling](../inference-scheduling/README.md) stack:
+- **Infra** (gateway infrastructure)
+- **GAIE** (inference pool and endpoint picker)
+- **Model Service** (vLLM inference pods)
+- **WVA** (workload-variant-autoscaler) in `llm-d-autoscaler` namespace
+
+WVA automatically discovers its namespace via `POD_NAMESPACE`.
+
+### Step 6: Install Prometheus Adapter (Required Dependency)
+
+Prometheus Adapter exposes WVA's external metric to HPA/KEDA. Install **after** WVA installation (Step 5), which creates the required `prometheus-ca` ConfigMap.
 
 Choose your platform and follow the corresponding section:
 
-#### 3.1: OpenShift
+#### 6.1: OpenShift
 
 ```bash
 # Setup
@@ -197,7 +224,7 @@ rules:
 YAML
 ```
 
-#### 3.2: GKE/Generic Kubernetes
+#### 6.2: GKE/Generic Kubernetes
 
 ```bash
 # Setup
@@ -218,9 +245,9 @@ helm upgrade -i prometheus-adapter prometheus-community/prometheus-adapter \
   --version 5.2.0 -n ${MON_NS} --create-namespace -f ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml
 ```
 
-#### 3.3: Kind/HTTPS Prometheus
+#### 6.3: Kind/HTTPS Prometheus
 
-For Kind clusters with HTTPS Prometheus (configured in Step 2), configure CA certificate **before** installation:
+For Kind clusters with HTTPS Prometheus (configured in Step 2), the `prometheus-ca` ConfigMap is created by WVA (Step 5). Configure Prometheus Adapter to use it:
 
 ```bash
 # Setup
@@ -228,15 +255,11 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 helm repo update
 export MON_NS=${MON_NS:-llm-d-monitoring}
 
-# Extract CA cert and create ConfigMap (required before installation)
-kubectl get secret prometheus-web-tls -n ${MON_NS} -o jsonpath='{.data.tls\.crt}' | base64 -d > ${TMPDIR:-/tmp}/prometheus-ca.crt
-kubectl create configmap prometheus-ca -n ${MON_NS} --from-file=ca.crt=${TMPDIR:-/tmp}/prometheus-ca.crt --dry-run=client -o yaml | kubectl apply -f -
-
 # Download values
 curl -o ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml \
   https://raw.githubusercontent.com/llm-d-incubation/workload-variant-autoscaler/v0.0.5/config/samples/prometheus-adapter-values.yaml
 
-# Configure values with CA cert
+# Configure values with CA cert (ConfigMap created by WVA in Step 5)
 cat >> ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml <<EOF
 prometheus:
   url: https://llmd-kube-prometheus-stack-prometheus.${MON_NS}.svc.cluster.local
@@ -258,48 +281,12 @@ EOF
 helm upgrade -i prometheus-adapter prometheus-community/prometheus-adapter \
   --version 5.2.0 -n ${MON_NS} --create-namespace -f ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml
 ```
+> **Note**: WVA creates the `prometheus-ca` ConfigMap in the monitoring namespace using the `caCert` value. This ConfigMap is required for Prometheus Adapter (Step 6.3).
 
-**Verify installation**: `kubectl get pods -n ${MON_NS} -l app.kubernetes.io/name=prometheus-adapter` and test external metrics API.
+**Verify installation**: `kubectl get pods -n ${MON_NS} -l app.kubernetes.io/name=prometheus-adapter`
 
-### Step 4: Create WVA Namespace (if needed)
 
-The helmfile creates `llm-d-autoscaler` namespace automatically if it doesn't exist. **Note:** If you created the namespace in Prerequisites #4 for the HF token secret, it's already created.
-
-**For OpenShift only**, ensure the namespace has the monitoring label:
-
-```bash
-export NAMESPACE=${NAMESPACE:-llm-d-autoscaler}
-kubectl label namespace "${NAMESPACE}" openshift.io/user-monitoring=true --overwrite
-```
-
-### Step 5: Install WVA CRDs (Required)
-
-Install WVA CRDs before deploying:
-
-```bash
-kubectl apply -f https://raw.githubusercontent.com/llm-d-incubation/workload-variant-autoscaler/v0.0.5/charts/workload-variant-autoscaler/crds/llmd.ai_variantautoscalings.yaml
-kubectl get crd variantautoscalings.llmd.ai
-```
-
-### Step 6: Install llm-d Stack with WVA
-
-Install the complete llm-d inference-scheduling stack (infra, gaie, modelservice) plus WVA:
-
-```bash
-export NAMESPACE=${NAMESPACE:-llm-d-autoscaler}
-cd guides/workload-autoscaling
-helmfile apply -n ${NAMESPACE}
-```
-
-This installs the complete [Intelligent Inference Scheduling](../inference-scheduling/README.md) stack:
-- **Infra** (gateway infrastructure)
-- **GAIE** (inference pool and endpoint picker)
-- **Model Service** (vLLM inference pods)
-- **WVA** (workload-variant-autoscaler) in `llm-d-autoscaler` namespace
-
-WVA automatically discovers its namespace via `POD_NAMESPACE`.
-
-### Step 7: Verify Installation
+### Step 7: Verify End-to-End Installation
 
 ```bash
 export NAMESPACE=${NAMESPACE:-llm-d-autoscaler}
@@ -315,7 +302,7 @@ kubectl get hpa -n ${NAMESPACE}
 kubectl get variantautoscalings -n ${NAMESPACE}
 ```
 
-## Configuration
+## Configuration Checklist
 
 Edit `workload-autoscaling/values.yaml` for WVA settings. Key configurations:
 
@@ -328,7 +315,7 @@ llmd:
 **Accelerator** (L40S, A100, H100, Intel-Max-1550):
 ```yaml
 va:
-  accelerator: L40S
+  accelerator: L40S # your accelerator type
 ```
 
 **Prometheus** (platform-specific):
