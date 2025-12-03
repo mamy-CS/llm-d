@@ -200,7 +200,7 @@ WVA will auto-detect the model service name based on common patterns, but you ca
 
 ```bash
 # Set the namespace where your inference-scheduling is deployed (default: llm-d-inference-scheduling)
-export LLMD_NAMESPACE=llm-d-inference-scheduling
+export LLMD_NAMESPACE=llm-d-inference-scheduler
 
 # Set the release name postfix used for inference-scheduling (default: inference-scheduling)
 # This is used to auto-detect the model service name: ms-{RELEASE_NAME_POSTFIX}-llm-d-modelservice
