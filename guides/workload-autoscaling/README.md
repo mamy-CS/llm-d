@@ -368,7 +368,7 @@ Edit `workload-autoscaling/values.yaml` for WVA settings. Key configurations:
 **For WVA-Only Mode**: If using wva-only installation, configure connection to existing inference-scheduling deployment:
 ```yaml
 llmd:
-  namespace: llm-d-inference-scheduling  # Namespace of existing inference-scheduling deployment
+  namespace: llm-d-inference-scheduler  # Namespace of existing inference-scheduling deployment
   modelName: ms-inference-scheduling-llm-d-modelservice  # Optional: explicit model service name (auto-detected if not set)
   modelID: "Qwen/Qwen3-0.6B"  # Must match model ID in your inference-scheduling deployment
 ```
