@@ -191,7 +191,7 @@ If you already have the [Intelligent Inference Scheduling](../inference-scheduli
 
 **Prerequisites:**
 - An existing inference-scheduling deployment in your cluster
-- The namespace where inference-scheduling is deployed (default: `llm-d-inference-scheduling`)
+- The namespace where inference-scheduling is deployed (default: `llm-d-inference-scheduler`)
 - The release name postfix used for inference-scheduling (default: `inference-scheduling`)
 
 **Configuration:**
