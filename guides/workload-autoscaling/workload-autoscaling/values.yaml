@@ -1,18 +1,12 @@
 wva:
   enabled: true
-
-  image:
-    repository: ghcr.io/llm-d/workload-variant-autoscaler
-    tag: v0.4.1
   imagePullPolicy: Always
-
   metrics:
     enabled: true
     port: 8443
     secure: true
-  
+
   reconcileInterval: 60s
-    
   prometheus:
     monitoringNamespace: llm-d-monitoring # Namespace for Prometheus monitoring
     serviceAccountName: "kube-prometheus-stack-prometheus"
