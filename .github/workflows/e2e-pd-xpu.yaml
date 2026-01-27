@@ -91,7 +91,7 @@ jobs:
       - name: fetch helm manifests - prepare for upload
         run: |
           for release_name in "${INFRA_RELEASE_NAME}" "${GAIE_RELEASE_NAME}" "${MS_RELEASE_NAME}"; do
-            /bin/sh .github/scripts/e2e/helm-get-all.sh \
+            bash .github/scripts/e2e/helm-get-all.sh \
               ~/pd-xpu-deployment.log \
               "$release_name" \
               "$NAMESPACE"
@@ -134,7 +134,7 @@ jobs:
           helm list -n "${NAMESPACE}" || true
           echo ""
           echo "=== Inference Pools ==="
-          kubectl get InferencePool.inference.networking.x-k8s.io -n "${NAMESPACE}" || true
+          kubectl get InferencePool.inference.networking.k8s.io -n "${NAMESPACE}" || true
           echo ""
           echo "=== HTTPRoutes ==="
           kubectl get httproutes -n "${NAMESPACE}" || true

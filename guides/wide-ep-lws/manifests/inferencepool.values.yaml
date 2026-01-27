@@ -8,7 +8,7 @@ inferenceExtension:
   image:
     name: llm-d-inference-scheduler
     hub: ghcr.io/llm-d
-    tag: v0.4.0-rc.1
+    tag: v0.4.0
   extProcPort: 9002
   monitoring:
     interval: "10s"
@@ -24,7 +24,7 @@ inferenceExtension:
   pluginsCustomConfig:
     custom-plugins.yaml: |
       # ALWAYS DO PD IN THIS EXAMPLE (THRESHOLD 0)
-      # This example uses random routing 
+      # This example uses random routing
       # since it's not yet possible to route to individual DP ranks
       apiVersion: inference.networking.x-k8s.io/v1alpha1
       kind: EndpointPickerConfig
@@ -50,26 +50,27 @@ inferenceExtension:
         - pluginRef: random-picker
 
 inferencePool:
-  apiVersion: inference.networking.k8s.io/v1
   modelServers:
     matchLabels:
       llm-d.ai/inferenceServing: "true"
       llm-d.ai/model: DeepSeek-R1-0528
-  provider:
-    istio:
-      destinationRule:
-        host: deepseek-r1-epp
-        trafficPolicy:
-          tls:
-            mode: SIMPLE
-            insecureSkipVerify: true
-          connectionPool:
-            http:
-              http1MaxPendingRequests: 256000
-              maxRequestsPerConnection: 256000
-              http2MaxRequests: 256000
-              idleTimeout: "900s"
-            tcp:
-              maxConnections: 256000
-              maxConnectionDuration: "1800s"
-              connectTimeout: "900s"
+
+provider:
+  name: istio
+  istio:
+    destinationRule:
+      host: llm-d-infpool-epp
+      trafficPolicy:
+        tls:
+          mode: SIMPLE
+          insecureSkipVerify: true
+        connectionPool:
+          http:
+            http1MaxPendingRequests: 256000
+            maxRequestsPerConnection: 256000
+            http2MaxRequests: 256000
+            idleTimeout: "900s"
+          tcp:
+            maxConnections: 256000
+            maxConnectionDuration: "1800s"
+            connectTimeout: "900s"

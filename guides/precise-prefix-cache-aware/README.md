@@ -8,21 +8,24 @@ This guide demonstrates how to configure the inference scheduler to use the new 
 
 - Have the [proper client tools installed on your local system](../prereq/client-setup/README.md) to use this guide.
 - Configure and deploy your [Gateway control plane](../prereq/gateway-provider/README.md).
-- [Create the `llm-d-hf-token` secret in your target namespace with the key `HF_TOKEN` matching a valid HuggingFace token](../prereq/client-setup/README.md#huggingface-token) to pull models.
 - Have the [Monitoring stack](../../docs/monitoring/README.md) installed on your system.
+- Create a namespace for installation.
+  
+  ```
+  export NAMESPACE=llm-d-precise # or any other namespace (shorter names recommended)
+  kubectl create namespace ${NAMESPACE}
+  ```
+
+- [Create the `llm-d-hf-token` secret in your target namespace with the key `HF_TOKEN` matching a valid HuggingFace token](../prereq/client-setup/README.md#huggingface-token) to pull models.
+- [Choose an llm-d version](../prereq/client-setup/README.md#llm-d-version)
 
 ## Installation
 
 Use the helmfile to compose and install the stack. The Namespace in which the stack will be deployed will be derived from the `${NAMESPACE}` environment variable. If you have not set this, it will default to `llm-d-precise` in this example.
 
+### Deploy
+
 ```bash
-export NAMESPACE=llm-d-precise # Or any namespace your heart desires
-kubectl create namespace ${NAMESPACE}
-
-# Clone the repo and switch to the latest release tag 
-tag=$(curl -s https://api.github.com/repos/llm-d/llm-d/releases/latest | jq -r '.tag_name')
-git clone https://github.com/llm-d/llm-d.git && cd llm-d && git checkout "$tag"
-
 cd guides/precise-prefix-cache-aware
 helmfile apply -n ${NAMESPACE}
 ```
@@ -66,9 +69,9 @@ kubectl apply -f httproute.gke.yaml -n ${NAMESPACE}
 ```bash
 helm list -n ${NAMESPACE}
 NAME            NAMESPACE       REVISION        UPDATED                                 STATUS          CHART                           APP VERSION
-gaie-kv-events  llm-d-precise   1               2025-09-25 21:36:52.452999581 +0000 UTC deployed        inferencepool-v1.2.0-rc.1       v1.2.0-rc.1
-infra-kv-events llm-d-precise   1               2025-09-25 21:36:50.848300265 +0000 UTC deployed        llm-d-infra-v1.3.4              v0.3.0     
-ms-kv-events    llm-d-precise   1               2025-09-25 21:36:55.955958022 +0000 UTC deployed        llm-d-modelservice-v0.3.8       v0.3.0 
+gaie-kv-events  llm-d-precise   1               2025-09-25 21:36:52.452999581 +0000 UTC deployed        inferencepool-v1.2.0            v1.2.0
+infra-kv-events llm-d-precise   1               2025-09-25 21:36:50.848300265 +0000 UTC deployed        llm-d-infra-v1.3.6              v0.3.0     
+ms-kv-events    llm-d-precise   1               2025-09-25 21:36:55.955958022 +0000 UTC deployed        llm-d-modelservice-v0.3.17      v0.3.0 
 ```
 
 - Out of the box with this example you should have the following resources:
@@ -78,13 +81,13 @@ kubectl get all -n ${NAMESPACE}
 NAME                                                          READY   STATUS    RESTARTS   AGE
 pod/gaie-kv-events-epp-687b78968b-wvswh                       1/1     Running   0          80s
 pod/infra-kv-events-inference-gateway-istio-949d87f84-zvsp2   1/1     Running   0          85s
-pod/ms-kv-events-llm-d-modelservice-decode-b874d48d9-bgm5r    2/2     Running   0          75s
-pod/ms-kv-events-llm-d-modelservice-decode-b874d48d9-ph64c    2/2     Running   0          75s
+pod/ms-kv-events-llm-d-modelservice-decode-b874d48d9-bgm5r    1/1     Running   0          75s
+pod/ms-kv-events-llm-d-modelservice-decode-b874d48d9-ph64c    1/1     Running   0          75s
 
 NAME                                              TYPE           CLUSTER-IP   EXTERNAL-IP   PORT(S)                        AGE
 service/gaie-kv-events-epp                        ClusterIP      10.16.2.44   <none>        9002/TCP,9090/TCP,5557/TCP     81s
 service/gaie-kv-events-ip-805c964d                ClusterIP      None         <none>        54321/TCP                      75s
-service/infra-kv-events-inference-gateway-istio   LoadBalancer   10.16.1.30   10.16.4.2     15021:32033/TCP,80:39332/TCP   86s
+service/infra-kv-events-inference-gateway-istio   ClusterIP      10.16.1.30   10.16.4.2     15021:32033/TCP,80:39332/TCP   86s
 
 NAME                                                      READY   UP-TO-DATE   AVAILABLE   AGE
 deployment.apps/gaie-kv-events-epp                        1/1     1            1           81s
