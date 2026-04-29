@@ -46,6 +46,9 @@ kubectl label namespace "${WVA_NAMESPACE}" openshift.io/user-monitoring=true --o
 
 ### OpenShift
 
+> [!NOTE]
+> OpenShift User Workload Monitoring must be enabled for the namespaces used by this guide.
+
 Configure WVA to query the cluster Thanos Querier:
 
 ```bash
@@ -53,14 +56,14 @@ export PROMETHEUS_BASE_URL=https://thanos-querier.openshift-monitoring.svc.clust
 export PROMETHEUS_TLS_INSECURE_SKIP_VERIFY=false
 ```
 
-Optional (strict TLS): extract the Thanos Querier CA and provide it to the controller as `prometheus-client-cert`:
+Optional (strict TLS): manage the `prometheus-client-cert` secret with Kustomize.
 
 ```bash
 export PROMETHEUS_CA_CERT=$(kubectl get secret thanos-querier-tls -n openshift-monitoring -o jsonpath='{.data.tls\.crt}' | base64 -d)
-kubectl create secret generic prometheus-client-cert \
-  -n ${WVA_NAMESPACE} \
-  --from-literal=ca.crt="${PROMETHEUS_CA_CERT}" \
-  --dry-run=client -o yaml | kubectl apply -f -
+WVA_TLS_OVERLAY_DIR=$(mktemp -d)
+cp -R guides/workload-autoscaling/wva-tls-overlay/. "${WVA_TLS_OVERLAY_DIR}"
+printf "%s" "${PROMETHEUS_CA_CERT}" > "${WVA_TLS_OVERLAY_DIR}/ca.crt"
+kubectl apply -k "${WVA_TLS_OVERLAY_DIR}" -n ${WVA_NAMESPACE}
 ```
 
 ### GKE
@@ -89,29 +92,13 @@ export PROMETHEUS_TLS_INSECURE_SKIP_VERIFY=false
 
 ## Installation
 
-Install the WVA controller using Kustomize:
+Install WVA and apply default Prometheus settings using Kustomize:
 
 ```bash
-export VERSION=v0.6.0
-kubectl apply -k "github.com/llm-d/llm-d-workload-variant-autoscaler/config/default?ref=${VERSION}"
+kubectl apply -k guides/workload-autoscaling/wva-config-overlay
 ```
 
-If the deployed controller image tag does not match `${VERSION}` (for example due to stale image references in upstream manifests), set it explicitly:
-
-```bash
-kubectl set image deployment/workload-variant-autoscaler-controller-manager \
-  -n ${WVA_NAMESPACE} \
-  manager=ghcr.io/llm-d/llm-d-workload-variant-autoscaler:${VERSION}
-```
-
-Patch the WVA config map with the platform-specific Prometheus settings:
-
-```bash
-kubectl patch configmap workload-variant-autoscaler-wva-variantautoscaling-config \
-  -n ${WVA_NAMESPACE} \
-  --type merge \
-  -p "{\"data\":{\"PROMETHEUS_BASE_URL\":\"${PROMETHEUS_BASE_URL}\",\"PROMETHEUS_TLS_INSECURE_SKIP_VERIFY\":\"${PROMETHEUS_TLS_INSECURE_SKIP_VERIFY}\"}}"
-```
+If your environment differs from the default values in `wva-config-overlay/configmap-patch.yaml`, update `PROMETHEUS_BASE_URL` and `PROMETHEUS_TLS_INSECURE_SKIP_VERIFY` before applying.
 
 > **Note**: By default, this install watches all namespaces for `VariantAutoscaling` resources. To run namespace-scoped mode, update the controller args in the Kustomize manifests so `--watch-namespace` is set to your target namespace before applying.
 
@@ -251,7 +238,7 @@ curl -o ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml \
   https://raw.githubusercontent.com/llm-d-incubation/workload-variant-autoscaler/${VERSION}/config/samples/prometheus-adapter-values.yaml
 
 # Update Prometheus URL
-sed -i.bak "s|url:.*|url: https://llmd-kube-prometheus-stack-prometheus.${MON_NS}.svc.cluster.local:9090|" ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml || \
+sed -i.bak "s|url:.*|url: https://kube-prometheus-stack-prometheus.${MON_NS}.svc.cluster.local:9090|" ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml || \
   echo "Edit ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml to set prometheus.url"
 
 # Install
@@ -277,7 +264,7 @@ curl -o ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml \
 # Configure values with CA cert (ConfigMap created by WVA during controller installation)
 cat >> ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml <<EOF
 prometheus:
-  url: https://llmd-kube-prometheus-stack-prometheus.${MON_NS}.svc.cluster.local
+  url: https://kube-prometheus-stack-prometheus.${MON_NS}.svc.cluster.local
   port: 9090
 extraArguments:
   - --prometheus-ca-file=/etc/ssl/certs/prometheus-ca.crt

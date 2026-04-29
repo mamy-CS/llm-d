@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: workload-variant-autoscaler-wva-variantautoscaling-config
+data:
+  PROMETHEUS_BASE_URL: "https://kube-prometheus-stack-prometheus.llm-d-monitoring.svc.cluster.local:9090"
+  PROMETHEUS_TLS_INSECURE_SKIP_VERIFY: "true"
