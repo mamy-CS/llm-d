@@ -3,5 +3,6 @@ kind: ConfigMap
 metadata:
   name: workload-variant-autoscaler-wva-variantautoscaling-config
 data:
-  PROMETHEUS_BASE_URL: "https://kube-prometheus-stack-prometheus.llm-d-monitoring.svc.cluster.local:9090"
+  PROMETHEUS_BASE_URL: "https://thanos-querier.openshift-monitoring.svc.cluster.local:9091"
   PROMETHEUS_TLS_INSECURE_SKIP_VERIFY: "true"
+  PROMETHEUS_CA_CERT_PATH: "/etc/prometheus-certs/ca.crt"

@@ -3,6 +3,8 @@ kind: Kustomization
 resources:
   - va.yaml
   - hpa.yaml
+  - vllm-service.yaml
+  - vllm-servicemonitor.yaml
 
 # If you set the $RELEASE_NAME_POSTFIX environment variable when installing the optimized-baseline stack,
 # you need to set the same postfix here to ensure the correct resources are targeted.

@@ -3,8 +3,26 @@ kind: Kustomization
 namespace: llm-d-autoscaler
 resources:
   - github.com/llm-d/llm-d-workload-variant-autoscaler/config/default?ref=v0.6.0
+  - controller-manager-token-secret.yaml
+  - metrics-reader-rolebinding.yaml
 patches:
   - path: configmap-patch.yaml
     target:
       kind: ConfigMap
       name: workload-variant-autoscaler-wva-variantautoscaling-config
+  - path: controller-deployment-patch.yaml
+    target:
+      kind: Deployment
+      name: workload-variant-autoscaler-controller-manager
+  - path: servicemonitor-patch.yaml
+    target:
+      kind: ServiceMonitor
+      name: workload-variant-autoscaler-controller-manager-metrics-monitor
+  - path: metrics-auth-rolebinding-patch.yaml
+    target:
+      kind: ClusterRoleBinding
+      name: workload-variant-autoscaler-prometheus-metrics-auth-rolebinding
+  - path: epp-token-secret-patch.yaml
+    target:
+      kind: Secret
+      name: workload-variant-autoscaler-epp-metrics-token

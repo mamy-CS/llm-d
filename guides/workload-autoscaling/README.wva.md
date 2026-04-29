@@ -35,6 +35,8 @@ kubectl create namespace ${NAMESPACE}
 kubectl create namespace ${WVA_NAMESPACE}
 ```
 
+> **Default mode**: this guide installs WVA scoped to `llm-d-optimized-baseline` by default.
+
 **For OpenShift only**, ensure both namespaces have the monitoring label:
 
 ```bash
@@ -52,9 +54,12 @@ kubectl label namespace "${WVA_NAMESPACE}" openshift.io/user-monitoring=true --o
 Configure WVA to query the cluster Thanos Querier:
 
 ```bash
-export PROMETHEUS_BASE_URL=https://thanos-querier.openshift-monitoring.svc.cluster.local
-export PROMETHEUS_TLS_INSECURE_SKIP_VERIFY=false
+cat guides/workload-autoscaling/wva-config-overlay/configmap-patch.yaml
 ```
+
+OpenShift defaults are already set in the overlay:
+- `PROMETHEUS_BASE_URL=https://thanos-querier.openshift-monitoring.svc.cluster.local:9091`
+- `PROMETHEUS_TLS_INSECURE_SKIP_VERIFY=true`
 
 Optional (strict TLS): manage the `prometheus-client-cert` secret with Kustomize.
 
@@ -92,15 +97,15 @@ export PROMETHEUS_TLS_INSECURE_SKIP_VERIFY=false
 
 ## Installation
 
-Install WVA and apply default Prometheus settings using Kustomize:
+Install WVA using the OpenShift defaults in `wva-config-overlay/configmap-patch.yaml`:
 
 ```bash
-kubectl apply -k guides/workload-autoscaling/wva-config-overlay
+kubectl apply -k guides/workload-autoscaling/wva-config-overlay -n ${WVA_NAMESPACE}
 ```
 
-If your environment differs from the default values in `wva-config-overlay/configmap-patch.yaml`, update `PROMETHEUS_BASE_URL` and `PROMETHEUS_TLS_INSECURE_SKIP_VERIFY` before applying.
+If you are not using OpenShift defaults, edit `wva-config-overlay/configmap-patch.yaml` before applying.
 
-> **Note**: By default, this install watches all namespaces for `VariantAutoscaling` resources. To run namespace-scoped mode, update the controller args in the Kustomize manifests so `--watch-namespace` is set to your target namespace before applying.
+> **Note**: By default, this install watches `llm-d-optimized-baseline` (`--watch-namespace=llm-d-optimized-baseline`).
 
 ## Verify Installation
 
@@ -112,6 +117,8 @@ NAME                                                       READY   UP-TO-DATE   
 workload-variant-autoscaler-controller-manager              2/2     2            2           10m
 ```
 
+This guide configures the controller deployment with `replicas: 2` and leader election enabled for HA (one active leader plus one standby).
+
 ## Enabling Autoscaling for an Inference Deployment
 
 This section enables autoscaling for an existing [optimized-baseline](../optimized-baseline/README.md) deployment. It creates a `VariantAutoscaling` CR and an HPA that reads the `wva_desired_replicas` metric.
@@ -122,9 +129,9 @@ This section enables autoscaling for an existing [optimized-baseline](../optimiz
 kubectl apply -k optimized-baseline-autoscaling -n ${NAMESPACE}
 ```
 
-> **Note:** cluster-scoped mode: `${NAMESPACE}` must match the namespace where the optimized-baseline stack is running (default: `llm-d-optimized-baseline`).
-
-> **Note:** namespace-scoped mode: `${NAMESPACE}` must match the namespace where the WVA is running (default in this guide: `llm-d-autoscaler`).
+> **Note:** `${NAMESPACE}` should match the namespace where the optimized-baseline stack is running (commonly `llm-d-optimized-baseline`).
+>
+> **Note:** cluster-scoped mode: `${NAMESPACE}` should match the namespace where the optimized-baseline stack is running (commonly `llm-d-optimized-baseline`).
 
 > **Note:** If you set the `RELEASE_NAME_POSTFIX` environment variable when installing the optimized-baseline stack, you need to set the same postfix in the `kustomization.yaml` of this overlay to ensure the correct resources are targeted. For example, if you set `RELEASE_NAME_POSTFIX=my-custom` during installation, you should uncomment the line `nameSuffix: -my-custom` in the `kustomization.yaml` of this overlay.
 
@@ -133,22 +140,22 @@ kubectl apply -k optimized-baseline-autoscaling -n ${NAMESPACE}
 After a few minutes, you should see the new `VariantAutoscaling` resource:
 
 ```bash
-kubectl get variantautoscaling ms-optimized-baseline-llm-d-modelservice-decode -n ${NAMESPACE}
+kubectl get variantautoscaling optimized-baseline-nvidia-gpu-vllm-decode -n ${NAMESPACE}
 ```
 
 Expected output:
 
 ```
-NAME                                                TARGET                                              MODEL            OPTIMIZED   METRICSREADY   AGE
-ms-optimized-baseline-llm-d-modelservice-decode   ms-optimized-baseline-llm-d-modelservice-decode   Qwen/Qwen3-32B   1           True           37m
+NAME                                        TARGET                                      MODEL            OPTIMIZED   METRICSREADY   AGE
+optimized-baseline-nvidia-gpu-vllm-decode   optimized-baseline-nvidia-gpu-vllm-decode   Qwen/Qwen3-32B   1           True           37m
 ```
 
 You should also see the HPA with the `wva_desired_replicas` metric:
 
 ```bash
 kubectl get hpa -n ${NAMESPACE}
-NAME                                                REFERENCE                                              TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
-ms-optimized-baseline-llm-d-modelservice-decode   Deployment/ms-optimized-baseline-llm-d-modelservice-decode   0%/1         1         16         1         37m
+NAME                                        REFERENCE                                              TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
+optimized-baseline-nvidia-gpu-vllm-decode   Deployment/optimized-baseline-nvidia-gpu-vllm-decode   0%/1         1         16         1         37m
 ```
 
 ### Cleanup
@@ -200,7 +207,12 @@ sed -i.bak "s|url:.*|url: https://thanos-querier.openshift-monitoring.svc.cluste
 
 # Install
 helm upgrade -i prometheus-adapter prometheus-community/prometheus-adapter \
-  --version 5.2.0 -n ${MON_NS} --create-namespace -f ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml
+  --version 5.2.0 -n ${MON_NS} --create-namespace \
+  -f ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml \
+  -f guides/workload-autoscaling/prometheus-adapter-overlay/values-ocp-wva-external-metric.yaml
+
+# Verify that WVA metric is discoverable by external metrics API
+kubectl get --raw "/apis/external.metrics.k8s.io/v1beta1" | jq .
 
 # Verify RBAC permissions
 kubectl auth can-i --list --as=system:serviceaccount:${MON_NS}:prometheus-adapter | grep -E "monitoring.coreos.com|prometheuses|namespaces"
