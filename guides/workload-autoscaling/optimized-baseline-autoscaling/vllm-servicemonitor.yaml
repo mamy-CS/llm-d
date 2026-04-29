@@ -6,7 +6,8 @@ metadata:
     llm-d.ai/model: Qwen3-32B
 spec:
   namespaceSelector:
-    any: true
+    matchNames:
+      - llm-d-optimized-baseline
   selector:
     matchLabels:
       llm-d.ai/model: Qwen3-32B
