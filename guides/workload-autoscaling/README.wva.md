@@ -20,34 +20,46 @@ Before installing WVA, ensure you have:
 
     > **Note**: WVA requires HTTPS connections to Prometheus for metric collection. When installing the [monitoring stack](../../docs/monitoring/README.md), ensure to enable HTTPS/TLS support.
 
-    > **Note**: If selecting namespace-scoped mode below, make sure to install the inference stack in the same namespace as WVA (by default `llm-d-autoscaler`).
+    > **Note**: If selecting namespace-scoped mode below, make sure to install the optimized-baseline stack in the same namespace as WVA.
 
-    > **Notes**: currently WVA does not support the Wide Expert Parallelism (EP/DP) with LeaderWorkerSet well-lit path. Support for this will be added in a future release.
+    > **Note**: Currently, WVA does not support the Wide Expert Parallelism (EP/DP) with LeaderWorkerSet well-lit path. Support for this will be added in a future release.
 
-1. An external metrics provider installed and configured in your cluster (e.g., Prometheus together with Prometheus Adapter or KEDA). WVA relies on external metrics to make scaling decisions. See [Install Prometheus Adapter (Required Dependency)](#install-prometheus-adapter-required-dependency) for installation instructions.
+2. An external metrics provider installed and configured in your cluster (e.g., Prometheus together with Prometheus Adapter or KEDA). WVA relies on external metrics to make scaling decisions. See [Install Prometheus Adapter (Required Dependency)](#install-prometheus-adapter-required-dependency) for installation instructions.
 
-## Set your Namespace
+## Set Namespaces
 
-  ```bash
-  export NAMESPACE=llm-d-autoscaler
-  kubectl create namespace ${NAMESPACE}
-  ```
+```bash
+export WVA_NAMESPACE=workload-variant-autoscaler-system
+export NAMESPACE=llm-d-optimized-baseline
+kubectl create namespace ${NAMESPACE}
+```
 
-  **For OpenShift only**, ensure the namespace has the monitoring label:
+**For OpenShift only**, ensure both namespaces have the monitoring label:
 
-  ```bash
-  kubectl label namespace "${NAMESPACE}" openshift.io/user-monitoring=true --overwrite
-  ```
+```bash
+kubectl label namespace "${NAMESPACE}" openshift.io/user-monitoring=true --overwrite
+kubectl label namespace "${WVA_NAMESPACE}" openshift.io/user-monitoring=true --overwrite
+```
 
 ## Platform-Specific Configuration
 
 ### OpenShift
 
-For OpenShift deployments, use the OpenShift-specific Helm values file which configures WVA to connect to the cluster's Thanos Querier for metrics:
+Configure WVA to query the cluster Thanos Querier:
 
 ```bash
-export HELM_VALUES=workload-autoscaling/values-openshift.yaml
-export CA_CERT=$(kubectl get secret thanos-querier-tls -n openshift-monitoring -o jsonpath='{.data.tls\.crt}' | base64 -d)
+export PROMETHEUS_BASE_URL=https://thanos-querier.openshift-monitoring.svc.cluster.local
+export PROMETHEUS_TLS_INSECURE_SKIP_VERIFY=false
+```
+
+Optional (strict TLS): extract the Thanos Querier CA and provide it to the controller as `prometheus-client-cert`:
+
+```bash
+export PROMETHEUS_CA_CERT=$(kubectl get secret thanos-querier-tls -n openshift-monitoring -o jsonpath='{.data.tls\.crt}' | base64 -d)
+kubectl create secret generic prometheus-client-cert \
+  -n ${WVA_NAMESPACE} \
+  --from-literal=ca.crt="${PROMETHEUS_CA_CERT}" \
+  --dry-run=client -o yaml | kubectl apply -f -
 ```
 
 ### GKE
@@ -59,41 +71,62 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n llm-d-monitoring --create-namespace
 ```
 
-Then use the GKE-specific Helm values file which configures WVA to connect to the in-cluster Prometheus:
+Then configure WVA to query the in-cluster Prometheus:
 
 ```bash
-export HELM_VALUES=workload-autoscaling/values-gke.yaml
-export CA_CERT=
+export MON_NS=${MON_NS:-llm-d-monitoring}
+export PROMETHEUS_BASE_URL=https://kube-prometheus-stack-prometheus.${MON_NS}.svc.cluster.local:9090
+export PROMETHEUS_TLS_INSECURE_SKIP_VERIFY=true
+```
+
+For production, use strict TLS verification:
+
+```bash
+export PROMETHEUS_TLS_INSECURE_SKIP_VERIFY=false
+# Ensure the controller trusts the Prometheus CA via secret `prometheus-client-cert` (key: ca.crt)
 ```
 
 ## Installation
 
-Install the WVA controller using helm:
+Install the WVA controller using Kustomize:
 
-  ```bash
-  export VERSION=0.5.1
-  helm install llm-d-wva oci://ghcr.io/llm-d/workload-variant-autoscaler \
-    --namespace ${NAMESPACE} \
-    --version ${VERSION} \
-    --set wva.prometheus.caCert="$(echo "${CA_CERT}")" \
-    --values ${HELM_VALUES:=workload-autoscaling/values.yaml}
-  ```
+```bash
+export VERSION=v0.6.0
+kubectl apply -k "github.com/llm-d/llm-d-workload-variant-autoscaler/config/default?ref=${VERSION}"
+```
 
-  > **Note**: By default, WVA is configured to watch all namespaces for VariantAutoscaling resources. You can scope this to the namespace where WVA is installed by setting the `namespaceScoped` flag to `true`: `--set wva.namespaceScoped=true`
+If the deployed controller image tag does not match `${VERSION}` (for example due to stale image references in upstream manifests), set it explicitly:
+
+```bash
+kubectl set image deployment/workload-variant-autoscaler-controller-manager \
+  -n ${WVA_NAMESPACE} \
+  manager=ghcr.io/llm-d/llm-d-workload-variant-autoscaler:${VERSION}
+```
+
+Patch the WVA config map with the platform-specific Prometheus settings:
+
+```bash
+kubectl patch configmap workload-variant-autoscaler-wva-variantautoscaling-config \
+  -n ${WVA_NAMESPACE} \
+  --type merge \
+  -p "{\"data\":{\"PROMETHEUS_BASE_URL\":\"${PROMETHEUS_BASE_URL}\",\"PROMETHEUS_TLS_INSECURE_SKIP_VERIFY\":\"${PROMETHEUS_TLS_INSECURE_SKIP_VERIFY}\"}}"
+```
+
+> **Note**: By default, this install watches all namespaces for `VariantAutoscaling` resources. To run namespace-scoped mode, update the controller args in the Kustomize manifests so `--watch-namespace` is set to your target namespace before applying.
 
 ## Verify Installation
 
 Check that the WVA controller is running:
 
 ```bash
-kubectl get deployment -n ${NAMESPACE}
+kubectl get deployment -n ${WVA_NAMESPACE}
 NAME                                                       READY   UP-TO-DATE   AVAILABLE   AGE
-llm-d-wva-workload-variant-autoscaler-controller-manager   2/2     2            2           10m
+workload-variant-autoscaler-controller-manager              2/2     2            2           10m
 ```
 
 ## Enabling Autoscaling for an Inference Deployment
 
-This section enables autoscaling for an existing [optimized baseline](../optimized-baseline/README.md) deployment. It creates a `VariantAutoscaling` CR, and an HPA that reads the `wva_desired_replicas` metric.
+This section enables autoscaling for an existing [optimized-baseline](../optimized-baseline/README.md) deployment. It creates a `VariantAutoscaling` CR and an HPA that reads the `wva_desired_replicas` metric.
 
 ### Apply the Kustomize Overlay
 
@@ -101,9 +134,9 @@ This section enables autoscaling for an existing [optimized baseline](../optimiz
 kubectl apply -k optimized-baseline-autoscaling -n ${NAMESPACE}
 ```
 
-> **Note:** cluster-scoped mode: `${NAMESPACE}` must match the namespace where the optimized-baseline stack is running (default: `llm-d-inference-scheduler`).
+> **Note:** cluster-scoped mode: `${NAMESPACE}` must match the namespace where the optimized-baseline stack is running (default: `llm-d-optimized-baseline`).
 
-> **Note:** namespace-scoped mode: `${NAMESPACE}` must match the namespace where the WVA is running (default: `llm-d-autoscaler`).
+> **Note:** namespace-scoped mode: `${NAMESPACE}` must match the namespace where the WVA is running (default in this guide: `workload-variant-autoscaler-system`).
 
 > **Note:** If you set the `RELEASE_NAME_POSTFIX` environment variable when installing the optimized-baseline stack, you need to set the same postfix in the `kustomization.yaml` of this overlay to ensure the correct resources are targeted. For example, if you set `RELEASE_NAME_POSTFIX=my-custom` during installation, you should uncomment the line `nameSuffix: -my-custom` in the `kustomization.yaml` of this overlay.
 
@@ -132,7 +165,7 @@ ms-optimized-baseline-llm-d-modelservice-decode   Deployment/ms-optimized-baseli
 
 ### Cleanup
 
-To remove the autoscaling configuration, simply delete the kustomize overlay:
+To remove the autoscaling configuration, delete the Kustomize overlay:
 
 ```bash
 kubectl delete -k optimized-baseline-autoscaling/ -n ${NAMESPACE}
@@ -140,10 +173,10 @@ kubectl delete -k optimized-baseline-autoscaling/ -n ${NAMESPACE}
 
 ## WVA Controller Cleanup
 
-You can use helm to uninstall WVA:
+Remove the WVA controller with Kustomize:
 
 ```bash
-helm uninstall llm-d-wva -n ${NAMESPACE}
+kubectl delete -k "github.com/llm-d/llm-d-workload-variant-autoscaler/config/default?ref=${VERSION}"
 ```
 
 If you installed Prometheus Adapter for WVA, you can uninstall it as well:
@@ -166,11 +199,12 @@ Choose your platform and follow the corresponding section:
 # Setup
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
+export VERSION=${VERSION:-v0.6.0}
 export MON_NS=openshift-user-workload-monitoring
 
 # Download OpenShift-specific values
 curl -o ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml \
-  https://raw.githubusercontent.com/llm-d-incubation/workload-variant-autoscaler/v0.5.1/config/samples/prometheus-adapter-values-ocp.yaml
+  https://raw.githubusercontent.com/llm-d-incubation/workload-variant-autoscaler/${VERSION}/config/samples/prometheus-adapter-values-ocp.yaml
 
 # Update Prometheus URL
 sed -i.bak "s|url:.*|url: https://thanos-querier.openshift-monitoring.svc.cluster.local|" ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml || \
@@ -208,14 +242,15 @@ YAML
 # Setup
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
+export VERSION=${VERSION:-v0.6.0}
 export MON_NS=${MON_NS:-llm-d-monitoring}
 
 # Download values
 curl -o ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml \
-  https://raw.githubusercontent.com/llm-d-incubation/workload-variant-autoscaler/v0.5.1/config/samples/prometheus-adapter-values.yaml
+  https://raw.githubusercontent.com/llm-d-incubation/workload-variant-autoscaler/${VERSION}/config/samples/prometheus-adapter-values.yaml
 
 # Update Prometheus URL
-sed -i.bak "s|url:.*|url: http://llmd-kube-prometheus-stack-prometheus.${MON_NS}.svc.cluster.local:9090|" ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml || \
+sed -i.bak "s|url:.*|url: https://llmd-kube-prometheus-stack-prometheus.${MON_NS}.svc.cluster.local:9090|" ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml || \
   echo "Edit ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml to set prometheus.url"
 
 # Install
@@ -225,19 +260,20 @@ helm upgrade -i prometheus-adapter prometheus-community/prometheus-adapter \
 
 ### On Kind/HTTPS Prometheus
 
-For Kind clusters with HTTPS Prometheus (configured in Step 2), the `prometheus-ca` ConfigMap is created by WVA (Step 5). Configure Prometheus Adapter to use it:
+For Kind clusters with HTTPS Prometheus (configured in Platform-Specific Configuration), the `prometheus-ca` ConfigMap is created by WVA during controller installation. Configure Prometheus Adapter to use it:
 
 ```bash
 # Setup
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
+export VERSION=${VERSION:-v0.6.0}
 export MON_NS=${MON_NS:-llm-d-monitoring}
 
 # Download values
 curl -o ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml \
-  https://raw.githubusercontent.com/llm-d-incubation/workload-variant-autoscaler/v0.5.1/config/samples/prometheus-adapter-values.yaml
+  https://raw.githubusercontent.com/llm-d-incubation/workload-variant-autoscaler/${VERSION}/config/samples/prometheus-adapter-values.yaml
 
-# Configure values with CA cert (ConfigMap created by WVA in Step 5)
+# Configure values with CA cert (ConfigMap created by WVA during controller installation)
 cat >> ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml <<EOF
 prometheus:
   url: https://llmd-kube-prometheus-stack-prometheus.${MON_NS}.svc.cluster.local
@@ -260,7 +296,7 @@ helm upgrade -i prometheus-adapter prometheus-community/prometheus-adapter \
   --version 5.2.0 -n ${MON_NS} --create-namespace -f ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml
 ```
 
-> **Note**: WVA creates the `prometheus-ca` ConfigMap in the monitoring namespace using the `caCert` value. This ConfigMap is required for Prometheus Adapter (Step 6.3).
+> **Note**: WVA creates the `prometheus-ca` ConfigMap in the monitoring namespace using the configured CA cert settings. This ConfigMap is required for Prometheus Adapter.
 
 **Verify installation**: `kubectl get pods -n ${MON_NS} -l app.kubernetes.io/name=prometheus-adapter`
 
