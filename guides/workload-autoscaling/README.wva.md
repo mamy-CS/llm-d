@@ -32,6 +32,7 @@ Before installing WVA, ensure you have:
 export WVA_NAMESPACE=llm-d-autoscaler
 export NAMESPACE=llm-d-optimized-baseline
 kubectl create namespace ${NAMESPACE}
+kubectl create namespace ${WVA_NAMESPACE}
 ```
 
 **For OpenShift only**, ensure both namespaces have the monitoring label:
