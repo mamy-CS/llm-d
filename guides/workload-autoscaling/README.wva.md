@@ -20,7 +20,7 @@ Before installing WVA, ensure you have:
 
     > **Note**: WVA requires HTTPS connections to Prometheus for metric collection. When installing the [monitoring stack](../../docs/monitoring/README.md), ensure to enable HTTPS/TLS support.
 
-    > **Note**: If selecting namespace-scoped mode below, make sure to install the optimized-baseline stack in the same namespace as WVA.
+    > **Note**: If selecting namespace-scoped mode below, make sure to install the optimized-baseline stack in the same namespace as WVA (by default `llm-d-autoscaler`).
 
     > **Note**: Currently, WVA does not support the Wide Expert Parallelism (EP/DP) with LeaderWorkerSet well-lit path. Support for this will be added in a future release.
 
@@ -29,7 +29,7 @@ Before installing WVA, ensure you have:
 ## Set Namespaces
 
 ```bash
-export WVA_NAMESPACE=workload-variant-autoscaler-system
+export WVA_NAMESPACE=llm-d-autoscaler
 export NAMESPACE=llm-d-optimized-baseline
 kubectl create namespace ${NAMESPACE}
 ```
@@ -136,7 +136,7 @@ kubectl apply -k optimized-baseline-autoscaling -n ${NAMESPACE}
 
 > **Note:** cluster-scoped mode: `${NAMESPACE}` must match the namespace where the optimized-baseline stack is running (default: `llm-d-optimized-baseline`).
 
-> **Note:** namespace-scoped mode: `${NAMESPACE}` must match the namespace where the WVA is running (default in this guide: `workload-variant-autoscaler-system`).
+> **Note:** namespace-scoped mode: `${NAMESPACE}` must match the namespace where the WVA is running (default in this guide: `llm-d-autoscaler`).
 
 > **Note:** If you set the `RELEASE_NAME_POSTFIX` environment variable when installing the optimized-baseline stack, you need to set the same postfix in the `kustomization.yaml` of this overlay to ensure the correct resources are targeted. For example, if you set `RELEASE_NAME_POSTFIX=my-custom` during installation, you should uncomment the line `nameSuffix: -my-custom` in the `kustomization.yaml` of this overlay.
 
