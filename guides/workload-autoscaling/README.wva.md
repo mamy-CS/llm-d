@@ -123,6 +123,9 @@ This guide configures the controller deployment with `replicas: 2` and leader el
 
 This section enables autoscaling for an existing [optimized-baseline](../optimized-baseline/README.md) deployment. It creates a `VariantAutoscaling` CR and an HPA that reads the `wva_desired_replicas` metric.
 
+> **Important:** while installing optimized-baseline, make sure monitoring is enabled so vLLM metrics are scraped before applying this autoscaling overlay:
+> `kubectl apply -n ${NAMESPACE} -k guides/recipes/modelserver/components/monitoring`
+
 ### Apply the Kustomize Overlay
 
 ```bash
