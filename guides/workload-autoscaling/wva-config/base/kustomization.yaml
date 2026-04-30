@@ -6,10 +6,6 @@ resources:
   - controller-manager-token-secret.yaml
   - metrics-reader-rolebinding.yaml
 patches:
-  - path: configmap-patch.yaml
-    target:
-      kind: ConfigMap
-      name: workload-variant-autoscaler-wva-variantautoscaling-config
   - path: controller-deployment-patch.yaml
     target:
       kind: Deployment

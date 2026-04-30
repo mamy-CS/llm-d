@@ -26,6 +26,12 @@ Before installing WVA, ensure you have:
 
 2. An external metrics provider installed and configured in your cluster (e.g., Prometheus together with Prometheus Adapter or KEDA). WVA relies on external metrics to make scaling decisions. See [Install Prometheus Adapter (Required Dependency)](#install-prometheus-adapter-required-dependency) for installation instructions.
 
+3. Prometheus Operator CRDs are installed before applying WVA overlays (required for `ServiceMonitor` resources):
+
+```bash
+kubectl api-resources | rg ServiceMonitor
+```
+
 ## Set Namespaces
 
 ```bash
@@ -54,7 +60,7 @@ kubectl label namespace "${WVA_NAMESPACE}" openshift.io/user-monitoring=true --o
 Configure WVA to query the cluster Thanos Querier:
 
 ```bash
-cat guides/workload-autoscaling/wva-config-overlay/configmap-patch.yaml
+cat guides/workload-autoscaling/wva-config/platform/ocp/configmap-patch.yaml
 ```
 
 OpenShift defaults are already set in the overlay:
@@ -66,7 +72,7 @@ Optional (strict TLS): manage the `prometheus-client-cert` secret with Kustomize
 ```bash
 export PROMETHEUS_CA_CERT=$(kubectl get secret thanos-querier-tls -n openshift-monitoring -o jsonpath='{.data.tls\.crt}' | base64 -d)
 WVA_TLS_OVERLAY_DIR=$(mktemp -d)
-cp -R guides/workload-autoscaling/wva-tls-overlay/. "${WVA_TLS_OVERLAY_DIR}"
+cp -R guides/workload-autoscaling/components/tls-overlay/. "${WVA_TLS_OVERLAY_DIR}"
 printf "%s" "${PROMETHEUS_CA_CERT}" > "${WVA_TLS_OVERLAY_DIR}/ca.crt"
 kubectl apply -k "${WVA_TLS_OVERLAY_DIR}" -n ${WVA_NAMESPACE}
 ```
@@ -97,13 +103,29 @@ export PROMETHEUS_TLS_INSECURE_SKIP_VERIFY=false
 
 ## Installation
 
-Install WVA using the OpenShift defaults in `wva-config-overlay/configmap-patch.yaml`:
+Optional preflight: validate platform overlays render before applying:
 
 ```bash
-kubectl apply -k guides/workload-autoscaling/wva-config-overlay -n ${WVA_NAMESPACE}
+kubectl kustomize guides/workload-autoscaling/wva-config/platform/ocp >/dev/null
+kubectl kustomize guides/workload-autoscaling/wva-config/platform/generic >/dev/null
+kubectl kustomize guides/workload-autoscaling/wva-config/platform/gke >/dev/null
 ```
 
-If you are not using OpenShift defaults, edit `wva-config-overlay/configmap-patch.yaml` before applying.
+Install WVA using the OpenShift overlay in `wva-config/platform/ocp`:
+
+```bash
+kubectl apply -k guides/workload-autoscaling/wva-config/platform/ocp -n ${WVA_NAMESPACE}
+```
+
+If you are not on OpenShift, use:
+
+```bash
+# Generic Kubernetes
+kubectl apply -k guides/workload-autoscaling/wva-config/platform/generic -n ${WVA_NAMESPACE}
+
+# GKE
+kubectl apply -k guides/workload-autoscaling/wva-config/platform/gke -n ${WVA_NAMESPACE}
+```
 
 > **Note**: By default, this install watches `llm-d-optimized-baseline` (`--watch-namespace=llm-d-optimized-baseline`).
 
@@ -133,8 +155,6 @@ kubectl apply -k optimized-baseline-autoscaling -n ${NAMESPACE}
 ```
 
 > **Note:** `${NAMESPACE}` should match the namespace where the optimized-baseline stack is running (commonly `llm-d-optimized-baseline`).
->
-> **Note:** cluster-scoped mode: `${NAMESPACE}` should match the namespace where the optimized-baseline stack is running (commonly `llm-d-optimized-baseline`).
 
 > **Note:** If you set the `RELEASE_NAME_POSTFIX` environment variable when installing the optimized-baseline stack, you need to set the same postfix in the `kustomization.yaml` of this overlay to ensure the correct resources are targeted. For example, if you set `RELEASE_NAME_POSTFIX=my-custom` during installation, you should uncomment the line `nameSuffix: -my-custom` in the `kustomization.yaml` of this overlay.
 
@@ -174,7 +194,14 @@ kubectl delete -k optimized-baseline-autoscaling/ -n ${NAMESPACE}
 Remove the WVA controller with Kustomize:
 
 ```bash
-kubectl delete -k "github.com/llm-d/llm-d-workload-variant-autoscaler/config/default?ref=${VERSION}"
+# OpenShift
+kubectl delete -k guides/workload-autoscaling/wva-config/platform/ocp -n ${WVA_NAMESPACE}
+
+# Generic Kubernetes
+kubectl delete -k guides/workload-autoscaling/wva-config/platform/generic -n ${WVA_NAMESPACE}
+
+# GKE
+kubectl delete -k guides/workload-autoscaling/wva-config/platform/gke -n ${WVA_NAMESPACE}
 ```
 
 If you installed Prometheus Adapter for WVA, you can uninstall it as well:
@@ -212,7 +239,7 @@ sed -i.bak "s|url:.*|url: https://thanos-querier.openshift-monitoring.svc.cluste
 helm upgrade -i prometheus-adapter prometheus-community/prometheus-adapter \
   --version 5.2.0 -n ${MON_NS} --create-namespace \
   -f ${TMPDIR:-/tmp}/prometheus-adapter-values.yaml \
-  -f guides/workload-autoscaling/prometheus-adapter-overlay/values-ocp-wva-external-metric.yaml
+  -f guides/workload-autoscaling/components/prometheus-adapter/values-wva-external-metric.yaml
 
 # Verify that WVA metric is discoverable by external metrics API
 kubectl get --raw "/apis/external.metrics.k8s.io/v1beta1" | jq .
