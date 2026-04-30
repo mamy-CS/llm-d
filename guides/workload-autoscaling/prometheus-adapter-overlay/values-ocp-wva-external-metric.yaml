@@ -9,21 +9,3 @@ rules:
         matches: ^wva_desired_replicas
         as: wva_desired_replicas
       metricsQuery: wva_desired_replicas{<<.LabelMatchers>>}
-    - seriesQuery: inference_extension_flow_control_queue_size
-      resources:
-        namespaced: false
-        overrides:
-          namespace:
-            resource: namespace
-      name:
-        as: epp_queue_size
-      metricsQuery: sum(inference_extension_flow_control_queue_size{namespace="fma-hpa",inference_pool="gaie-inference-scheduling"})
-    - seriesQuery: inference_objective_running_requests
-      resources:
-        namespaced: false
-        overrides:
-          namespace:
-            resource: namespace
-      name:
-        as: epp_running_requests
-      metricsQuery: sum(inference_objective_running_requests{namespace="fma-hpa",job="gaie-inference-scheduling-epp"})
