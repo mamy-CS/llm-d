@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - .github/workflows/ci-helmfile-dry-run.yaml
+      - .github/workflows/ci-kustomize-dry-run.yaml
       - .github/scripts/**
       - guides/recipes/**
       - guides/optimized-baseline/**
@@ -15,7 +15,6 @@ on:
       - guides/prereq/**
       - helpers/client-setup/**
       - docs/monitoring/scripts/install-prometheus-grafana.sh
-      - .github/workflows/ci-kustomize-dry-run.yaml
   workflow_dispatch:
 
 permissions:
@@ -37,7 +36,7 @@ jobs:
         with:
           filters: |
             optimized-baseline:
-              - .github/workflows/ci-helmfile-dry-run.yaml
+              - .github/workflows/ci-kustomize-dry-run.yaml
               - .github/scripts/install-gke-crds.sh
               - guides/prereq/gateway-provider/install-gateway-provider-dependencies.sh
               - docs/monitoring/scripts/install-prometheus-grafana.sh
@@ -45,7 +44,7 @@ jobs:
               - guides/recipes/scheduler/**
               - guides/optimized-baseline/**
             pd-disaggregation:
-              - .github/workflows/ci-helmfile-dry-run.yaml
+              - .github/workflows/ci-kustomize-dry-run.yaml
               - helpers/client-setup/install-deps.sh
               - guides/prereq/gateway-provider/common-configurations/**
               - guides/prereq/gateway-provider/install-gateway-provider-dependencies.sh
@@ -53,7 +52,7 @@ jobs:
               - docs/monitoring/scripts/install-prometheus-grafana.sh
               - guides/pd-disaggregation/**
             precise-prefix-cache-aware:
-              - .github/workflows/ci-helmfile-dry-run.yaml
+              - .github/workflows/ci-kustomize-dry-run.yaml
               - helpers/client-setup/install-deps.sh
               - guides/prereq/gateway-provider/common-configurations/**
               - guides/prereq/gateway-provider/install-gateway-provider-dependencies.sh
@@ -61,7 +60,7 @@ jobs:
               - docs/monitoring/scripts/install-prometheus-grafana.sh
               - guides/precise-prefix-cache-aware/**
             simulated-accelerators:
-              - .github/workflows/ci-helmfile-dry-run.yaml
+              - .github/workflows/ci-kustomize-dry-run.yaml
               - helpers/client-setup/install-deps.sh
               - guides/prereq/gateway-provider/common-configurations/**
               - guides/prereq/gateway-provider/install-gateway-provider-dependencies.sh
@@ -69,11 +68,9 @@ jobs:
               - docs/monitoring/scripts/install-prometheus-grafana.sh
               - guides/simulated-accelerators/**
             workload-autoscaling:
-              - .github/workflows/ci-helmfile-dry-run.yaml
-              - helpers/client-setup/install-deps.sh
-              - guides/prereq/gateway-provider/common-configurations/**
+              - .github/workflows/ci-kustomize-dry-run.yaml
+              - .github/scripts/install-gke-crds.sh
               - guides/prereq/gateway-provider/install-gateway-provider-dependencies.sh
-              - guides/prereq/gateway-provider/*.helmfile.yaml
               - docs/monitoring/scripts/install-prometheus-grafana.sh
               - guides/workload-autoscaling/**
 
