@@ -2,7 +2,7 @@ name: Nightly - WVA E2E (CKS)
 
 # Nightly regression test for WVA (Workload Variant Autoscaler) on CoreWeave
 # Kubernetes (CKS). Deploys the workload-autoscaling guide stack via the
-# consolidated helmfile reusable workflow and runs the WVA e2e test suite.
+# consolidated kustomize reusable workflow and runs the WVA e2e test suite.
 #
 # Builds the WVA controller image from main before testing, since the helm
 # chart on main may require features not yet in a tagged release image.
