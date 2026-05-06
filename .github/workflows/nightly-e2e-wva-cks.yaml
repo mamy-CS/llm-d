@@ -137,13 +137,25 @@ jobs:
         kubectl apply -k guides/workload-autoscaling/wva-config/platform/cks
 
         # Base kustomize watches llm-d-optimized-baseline; nightly workloads live in ${NAMESPACE}.
+        # Do not hardcode args[N]: upstream WVA chart order can change. Use one replica on CKS so
+        # kubectl wait Available is not blocked waiting for a second controller pod on busy GPU nodes.
+        PATCH_JSON=$(kubectl get deployment workload-variant-autoscaler-controller-manager -n "${WVA_DEPLOY_NS}" -o json | jq --arg ns "${NAMESPACE}" '
+          (.spec.template.spec.containers | map(.name == "manager") | index(true)) as $ci |
+          (.spec.template.spec.containers[$ci].args | to_entries | map(select(.value | startswith("--watch-namespace="))) | .[0].key) as $ai |
+          if ($ci | type) != "number" then error("manager container not found")
+          elif ($ai | type) != "number" then error("watch-namespace arg not found")
+          else
+            [
+              {"op":"replace","path":"/spec/replicas","value":1},
+              {"op":"replace","path":("/spec/template/spec/containers/" + ($ci|tostring) + "/args/" + ($ai|tostring)), "value":("--watch-namespace=" + $ns)}
+            ]
+          end')
         kubectl patch deployment workload-variant-autoscaler-controller-manager \
-          -n "${WVA_DEPLOY_NS}" --type=json \
-          -p="[{\"op\":\"replace\",\"path\":\"/spec/template/spec/containers/0/args/4\",\"value\":\"--watch-namespace=${NAMESPACE}\"}]"
+          -n "${WVA_DEPLOY_NS}" --type=json -p "${PATCH_JSON}"
 
         # Validate WVA controller is ready, then apply autoscaling resources
         kubectl wait deployment/workload-variant-autoscaler-controller-manager \
-          -n "${WVA_DEPLOY_NS}" --for=condition=Available --timeout=600s
+          -n "${WVA_DEPLOY_NS}" --for=condition=Available --timeout=900s
         kubectl apply -k guides/workload-autoscaling/optimized-baseline-autoscaling -n "${NAMESPACE}"
         kubectl get variantautoscaling,hpa -n "${NAMESPACE}"
       accelerator_type: H100
