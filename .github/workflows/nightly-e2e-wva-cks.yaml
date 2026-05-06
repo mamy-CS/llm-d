@@ -124,10 +124,13 @@ jobs:
         yq '.spec.template.spec.containers[0].volumeMounts += {"mountPath": "/.triton", "name": "triton-cache"}' -i guides/optimized-baseline/modelserver/gpu/vllm/patch-vllm.yaml
         yq '.spec.replicas=2' -i guides/optimized-baseline/modelserver/gpu/vllm/patch-vllm.yaml
         kubectl apply -k guides/optimized-baseline/modelserver/gpu/vllm -n ${NAMESPACE}
+        # Use predicted-latency scheduler values so --extra-validate predicted-latency passes:
+        # optimized-baseline plugins omit predicted-latency-producer; without it TTFT / predicted
+        # histograms on EPP :9090 stay empty (see guides/predicted-latency-based-scheduling).
         helm install workload-variant-autoscaler-inferencepool-standalone \
           oci://registry.k8s.io/gateway-api-inference-extension/charts/standalone \
           -f guides/recipes/scheduler/base.values.yaml \
-          -f guides/optimized-baseline/scheduler/optimized-baseline.values.yaml \
+          -f guides/predicted-latency-based-scheduling/scheduler/predicted-latency.values.yaml \
           -n ${NAMESPACE} --version v1.5.0
 
         # Kustomization validation dry run
