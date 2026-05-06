@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: workload-variant-autoscaler-wva-variantautoscaling-config
 data:
-  # CKS currently uses the same defaults as generic Kubernetes.
+  # CoreWeave kube-prometheus serves HTTPS with cluster-signed certs; the controller's
+  # default CA bundle often cannot verify without mounting the Prometheus CA (see README.wva.md).
+  # Match the relaxed TLS pattern used on OpenShift / GKE dev examples so startup succeeds.
   PROMETHEUS_BASE_URL: "https://prometheus-k8s.monitoring.svc.cluster.local:9090"
-  PROMETHEUS_TLS_INSECURE_SKIP_VERIFY: "false"
+  PROMETHEUS_TLS_INSECURE_SKIP_VERIFY: "true"

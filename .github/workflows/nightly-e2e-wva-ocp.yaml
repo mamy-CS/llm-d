@@ -143,6 +143,11 @@ jobs:
         # apply WVA assets
         kubectl apply -k guides/workload-autoscaling/wva-config/platform/ocp
 
+        # Base kustomize watches llm-d-optimized-baseline; nightly workloads live in ${NAMESPACE}.
+        kubectl patch deployment workload-variant-autoscaler-controller-manager \
+          -n "${WVA_DEPLOY_NS}" --type=json \
+          -p="[{\"op\":\"replace\",\"path\":\"/spec/template/spec/containers/0/args/4\",\"value\":\"--watch-namespace=${NAMESPACE}\"}]"
+
         # Validate WVA controller is ready, then apply autoscaling resources
         kubectl wait deployment/workload-variant-autoscaler-controller-manager \
           -n "${WVA_DEPLOY_NS}" --for=condition=Available --timeout=300s
