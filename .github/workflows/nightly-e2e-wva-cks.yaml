@@ -134,8 +134,18 @@ jobs:
         WVA_PROM_NS="${NAMESPACE}-monitoring"
         WVA_PROM_RELEASE=wva-nightly
         kubectl create namespace "${WVA_PROM_NS}" --dry-run=client -o yaml | kubectl apply -f -
-        PROM_SVC="${WVA_PROM_RELEASE}-kube-prometheus-stack-prometheus.${WVA_PROM_NS}.svc.cluster.local"
-        # X.509 CN is limited to 64 chars; the in-cluster DNS name is longer; use short CN + SAN.
+        helm repo add prometheus-community https://prometheus-community.github.io/helm-charts 2>/dev/null || true
+        helm repo update prometheus-community
+        # Helm truncates names to 63 chars — CR/service name is NOT …kube-prometheus-stack-prometheus.
+        PROM_RESOURCE="$(helm template "${WVA_PROM_RELEASE}" prometheus-community/kube-prometheus-stack \
+          --namespace "${WVA_PROM_NS}" --version 62.7.0 \
+          -f guides/workload-autoscaling/components/wva-nightly-prometheus-values.yaml 2>/dev/null \
+          | awk '/^---$/ { p=0; next } /^kind: Prometheus$/ { p=1; next } p && /^  name:/ { print $2; exit }')"
+        if [ -z "${PROM_RESOURCE}" ]; then
+          echo "Failed to resolve Prometheus CR name from helm template"; exit 1
+        fi
+        PROM_SVC="${PROM_RESOURCE}.${WVA_PROM_NS}.svc.cluster.local"
+        # X.509 CN is limited to 64 chars; use short CN + SAN (DNS SAN uses Helm-truncated service hostname).
         openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
           -subj "/CN=wva-nightly-prometheus" \
           -addext "subjectAltName=DNS:${PROM_SVC}" \
@@ -144,20 +154,25 @@ jobs:
         kubectl create secret tls prometheus-web-tls \
           --cert="${RUNNER_TEMP:-/tmp}/wva-prom-tls.crt" --key="${RUNNER_TEMP:-/tmp}/wva-prom-tls.key" \
           -n "${WVA_PROM_NS}" --dry-run=client -o yaml | kubectl apply -f -
-        helm repo add prometheus-community https://prometheus-community.github.io/helm-charts 2>/dev/null || true
-        helm repo update prometheus-community
         helm upgrade --install "${WVA_PROM_RELEASE}" prometheus-community/kube-prometheus-stack \
           --version 62.7.0 --namespace "${WVA_PROM_NS}" --skip-crds \
           -f guides/workload-autoscaling/components/wva-nightly-prometheus-values.yaml
-        kubectl wait --for=condition=Available prometheus "${WVA_PROM_RELEASE}-kube-prometheus-stack-prometheus" \
-          -n "${WVA_PROM_NS}" --timeout=600s
+        kubectl wait --for=condition=Available prometheus "${PROM_RESOURCE}" \
+          -n "${WVA_PROM_NS}" --timeout=600s || (
+          echo "::group::WVA nightly Prometheus not Available"
+          kubectl get prometheus -n "${WVA_PROM_NS}" -o wide || true
+          kubectl describe prometheus "${PROM_RESOURCE}" -n "${WVA_PROM_NS}" || true
+          kubectl get pods -n "${WVA_PROM_NS}" -o wide || true
+          echo "::endgroup::"
+          exit 1
+        )
 
         # Kustomization validation dry run
         kubectl kustomize guides/workload-autoscaling/wva-config/platform/cks >/dev/null
 
         # apply WVA assets (ConfigMap PROMETHEUS_BASE_URL default matches llm-d-nightly-wva; align if NAMESPACE differs)
         kubectl apply -k guides/workload-autoscaling/wva-config/platform/cks
-        PROM_URL="https://${WVA_PROM_RELEASE}-kube-prometheus-stack-prometheus.${WVA_PROM_NS}.svc.cluster.local:9090"
+        PROM_URL="https://${PROM_RESOURCE}.${WVA_PROM_NS}.svc.cluster.local:9090"
         kubectl patch configmap workload-variant-autoscaler-wva-variantautoscaling-config \
           -n "${WVA_DEPLOY_NS}" --type merge \
           -p "$(jq -nc --arg u "${PROM_URL}" '{"data":{"PROMETHEUS_BASE_URL":$u}}')"

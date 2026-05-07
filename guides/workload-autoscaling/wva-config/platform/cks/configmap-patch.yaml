@@ -3,5 +3,5 @@ kind: ConfigMap
 metadata:
   name: workload-variant-autoscaler-wva-variantautoscaling-config
 data:
-  PROMETHEUS_BASE_URL: "https://wva-nightly-kube-prometheus-stack-prometheus.llm-d-nightly-wva-monitoring.svc.cluster.local:9090"
+  PROMETHEUS_BASE_URL: "https://wva-nightly-kube-prometheu-prometheus.llm-d-nightly-wva-monitoring.svc.cluster.local:9090"
   PROMETHEUS_TLS_INSECURE_SKIP_VERIFY: "true"
