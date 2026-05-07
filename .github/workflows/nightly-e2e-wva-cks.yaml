@@ -135,8 +135,10 @@ jobs:
         WVA_PROM_RELEASE=wva-nightly
         kubectl create namespace "${WVA_PROM_NS}" --dry-run=client -o yaml | kubectl apply -f -
         PROM_SVC="${WVA_PROM_RELEASE}-kube-prometheus-stack-prometheus.${WVA_PROM_NS}.svc.cluster.local"
+        # X.509 CN is limited to 64 chars; the in-cluster DNS name is longer; use short CN + SAN.
         openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-          -subj "/CN=${PROM_SVC}" \
+          -subj "/CN=wva-nightly-prometheus" \
+          -addext "subjectAltName=DNS:${PROM_SVC}" \
           -keyout "${RUNNER_TEMP:-/tmp}/wva-prom-tls.key" \
           -out "${RUNNER_TEMP:-/tmp}/wva-prom-tls.crt"
         kubectl create secret tls prometheus-web-tls \
