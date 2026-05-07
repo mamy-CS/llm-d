@@ -206,6 +206,24 @@ jobs:
           end')
         kubectl patch deployment workload-variant-autoscaler-controller-manager \
           -n "${WVA_DEPLOY_NS}" --type=json -p "${PATCH_JSON}"
+        # One restart wave after NP + watch-namespace patch avoids stuck dual ReplicaSets (surge + CrashLoop).
+        kubectl rollout restart deployment/workload-variant-autoscaler-controller-manager \
+          -n "${WVA_DEPLOY_NS}"
+        # RollingUpdate + CrashLoop can leave an older ReplicaSet pod for days; keep newest RS only.
+        kubectl get rs -n "${WVA_DEPLOY_NS}" -o json | jq -r '
+          [.items[]
+           | select(any(.metadata.ownerReferences[]?; .kind=="Deployment" and .name=="workload-variant-autoscaler-controller-manager"))
+          ]
+          | sort_by(.metadata.creationTimestamp)
+          | reverse
+          | .[1:]
+          | .[]
+          | .metadata.name
+        ' | while read -r rsname; do
+          [ -n "${rsname}" ] || continue
+          echo "Deleting stale ReplicaSet ${rsname}"
+          kubectl delete rs "${rsname}" -n "${WVA_DEPLOY_NS}" --wait=false 2>/dev/null || true
+        done
 
         # Validate WVA controller is ready, then apply autoscaling resources
         echo "--- $(date -u +%H:%M:%SZ) waiting for WVA controller Available (${WVA_DEPLOY_NS}, timeout=900s) ---"
