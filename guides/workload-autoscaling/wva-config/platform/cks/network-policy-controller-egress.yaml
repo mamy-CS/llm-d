@@ -1,0 +1,39 @@
+# CoreWeave/CKS-style clusters often default-deny pod egress. The WVA controller must reach
+# kube-apiserver, DNS, and Prometheus in ${NAMESPACE}-monitoring (here: llm-d-nightly-wva-monitoring).
+# Without this, Prometheus client startup fails with: dial tcp ... connect: operation not permitted
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: workload-variant-autoscaler-controller-egress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: workload-variant-autoscaler
+      control-plane: controller-manager
+  policyTypes:
+    - Egress
+  egress:
+    # Kubernetes API (in-cluster Service / apiserver endpoints)
+    - ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 6443
+    # Cluster DNS (CoreDNS / kube-dns)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Dedicated nightly Prometheus (must match PROMETHEUS_BASE_URL namespace)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: llm-d-nightly-wva-monitoring
+      ports:
+        - protocol: TCP
+          port: 9090

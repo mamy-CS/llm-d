@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: llm-d-autoscaler
 resources:
   - ../../base
+  - network-policy-controller-egress.yaml
 patches:
   - path: configmap-patch.yaml
     target:

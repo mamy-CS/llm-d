@@ -208,15 +208,28 @@ jobs:
           -n "${WVA_DEPLOY_NS}" --type=json -p "${PATCH_JSON}"
 
         # Validate WVA controller is ready, then apply autoscaling resources
+        echo "--- $(date -u +%H:%M:%SZ) waiting for WVA controller Available (${WVA_DEPLOY_NS}, timeout=900s) ---"
+        kubectl get deployment workload-variant-autoscaler-controller-manager -n "${WVA_DEPLOY_NS}" -o wide 2>/dev/null || true
+        kubectl get pods -n "${WVA_DEPLOY_NS}" -l 'app.kubernetes.io/name=workload-variant-autoscaler,control-plane=controller-manager' -o wide 2>/dev/null || true
         kubectl wait deployment/workload-variant-autoscaler-controller-manager \
-          -n "${WVA_DEPLOY_NS}" --for=condition=Available --timeout=900s || (
+          -n "${WVA_DEPLOY_NS}" --for=condition=Available --timeout=900s &
+        WVA_AVAILABLE_WAIT_PID=$!
+        while kill -0 "${WVA_AVAILABLE_WAIT_PID}" 2>/dev/null; do
+          echo "--- $(date -u +%H:%M:%SZ) still waiting for WVA controller Available ---"
+          kubectl get deployment workload-variant-autoscaler-controller-manager -n "${WVA_DEPLOY_NS}" -o wide 2>/dev/null || true
+          kubectl get pods -n "${WVA_DEPLOY_NS}" -l 'app.kubernetes.io/name=workload-variant-autoscaler,control-plane=controller-manager' -o wide 2>/dev/null || true
+          sleep 30
+        done
+        wait "${WVA_AVAILABLE_WAIT_PID}"
+        WVA_AVAILABLE_EC=$?
+        if [ "${WVA_AVAILABLE_EC}" != 0 ]; then
           echo "::group::WVA controller not Available (CKS debug)"
           kubectl describe deployment workload-variant-autoscaler-controller-manager -n "${WVA_DEPLOY_NS}" || true
           kubectl get pods -n "${WVA_DEPLOY_NS}" -l 'app.kubernetes.io/name=workload-variant-autoscaler,control-plane=controller-manager' -o wide || true
           kubectl logs -n "${WVA_DEPLOY_NS}" -l 'app.kubernetes.io/name=workload-variant-autoscaler,control-plane=controller-manager' --tail=400 --all-containers=true --prefix=true || true
           echo "::endgroup::"
           exit 1
-        )
+        fi
         kubectl apply -k guides/workload-autoscaling/optimized-baseline-autoscaling -n "${NAMESPACE}"
         kubectl get variantautoscaling,hpa -n "${NAMESPACE}"
       accelerator_type: H100
