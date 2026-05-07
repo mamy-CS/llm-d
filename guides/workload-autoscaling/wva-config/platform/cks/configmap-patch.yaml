@@ -3,6 +3,6 @@ kind: ConfigMap
 metadata:
   name: workload-variant-autoscaler-wva-variantautoscaling-config
 data:
-  # CKS (CoreWeave): kube-prometheus-stack in llm-d-monitoring. Align with workload-autoscaling/values.yaml wva.prometheus.
-  PROMETHEUS_BASE_URL: "https://llmd-kube-prometheus-stack-prometheus.llm-d-monitoring.svc.cluster.local:9090"
-  PROMETHEUS_TLS_INSECURE_SKIP_VERIFY: "true"
+  # CKS: kube-prometheus-stack Service llmd-kube-prometheus-stack-prometheus (llm-d-monitoring).
+  PROMETHEUS_BASE_URL: "http://llmd-kube-prometheus-stack-prometheus.llm-d-monitoring.svc.cluster.local:9090"
+  PROMETHEUS_TLS_INSECURE_SKIP_VERIFY: "false"
