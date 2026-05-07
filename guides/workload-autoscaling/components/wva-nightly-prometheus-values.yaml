@@ -1,8 +1,9 @@
 # Minimal kube-prometheus-stack for WVA CKS nightlies (${NAMESPACE}-monitoring).
 # Prometheus web listens with TLS (requires Secret prometheus-web-tls in the namespace before helm upgrade).
 #
-# Matches default nightly convention: Helm release name wva-nightly, monitoring ns ${GUIDE_NS}-monitoring.
-# PROMETHEUS_BASE_URL may be rewritten by nightly-e2e-wva-cks custom_deploy_script if NAMESPACE differs.
+# Helm release name is kube-prometheus-stack 
+# so the Service is kube-prometheus-stack-prometheus.<ns>.svc.cluster.local without 63-char truncation.
+# PROMETHEUS_BASE_URL is set in wva-config/platform/cks and patched in nightly-e2e-wva-cks if NAMESPACE differs.
 alertmanager:
   enabled: false
 grafana:
@@ -41,6 +42,27 @@ prometheus:
     podMonitorSelectorNilUsesHelmValues: false
     podMonitorSelector: {}
     podMonitorNamespaceSelector: {}
+    # Self-signed web TLS: kubelet HTTP(S) probes verify the server cert against the node trust store and fail
+    # (pod stays NotReady / flaps). Override the prometheus container probes to TCP :9090 (TLS still used for clients).
+    containers:
+      - name: prometheus
+        startupProbe:
+          tcpSocket:
+            port: 9090
+          failureThreshold: 60
+          periodSeconds: 5
+        readinessProbe:
+          tcpSocket:
+            port: 9090
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+        livenessProbe:
+          tcpSocket:
+            port: 9090
+          initialDelaySeconds: 60
+          periodSeconds: 15
+          timeoutSeconds: 5
     web:
       tlsConfig:
         cert:

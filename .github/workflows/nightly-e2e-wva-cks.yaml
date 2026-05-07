@@ -130,25 +130,23 @@ jobs:
           -f guides/optimized-baseline/scheduler/optimized-baseline.values.yaml \
           -n ${NAMESPACE} --version v1.5.0
 
-        # Dedicated kube-prometheus-stack for WVA (TLS web :9090). Cluster may already have monitoring; this is namespaced.
+        # Dedicated kube-prometheus-stack for WVA (TLS web :9090) in ${NAMESPACE}-monitoring.
+        # Match WVA deploy/lib/deploy_prometheus_kube_stack.sh: release name kube-prometheus-stack →
+        # Service/CR kube-prometheus-stack-prometheus (no 63-char truncation).
         WVA_PROM_NS="${NAMESPACE}-monitoring"
-        WVA_PROM_RELEASE=wva-nightly
+        WVA_PROM_RELEASE=kube-prometheus-stack
+        PROM_RESOURCE=kube-prometheus-stack-prometheus
         kubectl create namespace "${WVA_PROM_NS}" --dry-run=client -o yaml | kubectl apply -f -
+        # Remove legacy release name if present (older llm-d nightlies used wva-nightly).
+        helm uninstall wva-nightly -n "${WVA_PROM_NS}" 2>/dev/null || true
         helm repo add prometheus-community https://prometheus-community.github.io/helm-charts 2>/dev/null || true
         helm repo update prometheus-community
-        # Helm truncates names to 63 chars — CR/service name is NOT …kube-prometheus-stack-prometheus.
-        PROM_RESOURCE="$(helm template "${WVA_PROM_RELEASE}" prometheus-community/kube-prometheus-stack \
-          --namespace "${WVA_PROM_NS}" --version 62.7.0 \
-          -f guides/workload-autoscaling/components/wva-nightly-prometheus-values.yaml 2>/dev/null \
-          | awk '/^---$/ { p=0; next } /^kind: Prometheus$/ { p=1; next } p && /^  name:/ { print $2; exit }')"
-        if [ -z "${PROM_RESOURCE}" ]; then
-          echo "Failed to resolve Prometheus CR name from helm template"; exit 1
-        fi
-        PROM_SVC="${PROM_RESOURCE}.${WVA_PROM_NS}.svc.cluster.local"
-        # X.509 CN is limited to 64 chars; use short CN + SAN (DNS SAN uses Helm-truncated service hostname).
+        PROM_SVC_FQDN="${PROM_RESOURCE}.${WVA_PROM_NS}.svc.cluster.local"
+        PROM_SVC_SHORT="${PROM_RESOURCE}.${WVA_PROM_NS}.svc"
+        # Same SAN pattern as WVA deploy_prometheus_kube_stack.sh (short CN; kubelet probes use TCP in values file).
         openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-          -subj "/CN=wva-nightly-prometheus" \
-          -addext "subjectAltName=DNS:${PROM_SVC}" \
+          -subj "/CN=prometheus" \
+          -addext "subjectAltName=DNS:${PROM_SVC_FQDN},DNS:${PROM_SVC_SHORT},DNS:prometheus,DNS:localhost" \
           -keyout "${RUNNER_TEMP:-/tmp}/wva-prom-tls.key" \
           -out "${RUNNER_TEMP:-/tmp}/wva-prom-tls.crt"
         kubectl create secret tls prometheus-web-tls \
@@ -157,15 +155,29 @@ jobs:
         helm upgrade --install "${WVA_PROM_RELEASE}" prometheus-community/kube-prometheus-stack \
           --version 62.7.0 --namespace "${WVA_PROM_NS}" --skip-crds \
           -f guides/workload-autoscaling/components/wva-nightly-prometheus-values.yaml
-        kubectl wait --for=condition=Available prometheus "${PROM_RESOURCE}" \
-          -n "${WVA_PROM_NS}" --timeout=600s || (
-          echo "::group::WVA nightly Prometheus not Available"
+        # Wait for Prometheus pods (not only CR condition=Available — some operator versions lag or omit it).
+        PROM_WAIT_OK=0
+        for attempt in $(seq 1 24); do
+          echo "--- Waiting for Prometheus pod Ready (${attempt}/24, ns=${WVA_PROM_NS}, cr=${PROM_RESOURCE}) ---"
+          kubectl get prometheus,statefulset,pods -n "${WVA_PROM_NS}" -o wide 2>/dev/null || true
+          if kubectl wait pod -n "${WVA_PROM_NS}" \
+              -l "operator.prometheus.io/name=${PROM_RESOURCE}" \
+              --for=condition=Ready --timeout=25s 2>/dev/null; then
+            PROM_WAIT_OK=1
+            break
+          fi
+          sleep 5
+        done
+        if [ "${PROM_WAIT_OK}" != 1 ]; then
+          echo "::group::WVA nightly Prometheus not Ready"
           kubectl get prometheus -n "${WVA_PROM_NS}" -o wide || true
           kubectl describe prometheus "${PROM_RESOURCE}" -n "${WVA_PROM_NS}" || true
-          kubectl get pods -n "${WVA_PROM_NS}" -o wide || true
+          kubectl describe pods -n "${WVA_PROM_NS}" -l "operator.prometheus.io/name=${PROM_RESOURCE}" || true
+          kubectl logs -n "${WVA_PROM_NS}" -l "operator.prometheus.io/name=${PROM_RESOURCE}" --all-containers=true --tail=200 --prefix=true 2>/dev/null || true
+          kubectl get events -n "${WVA_PROM_NS}" --sort-by='.lastTimestamp' | tail -40 || true
           echo "::endgroup::"
           exit 1
-        )
+        fi
 
         # Kustomization validation dry run
         kubectl kustomize guides/workload-autoscaling/wva-config/platform/cks >/dev/null
