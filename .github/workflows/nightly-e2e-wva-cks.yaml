@@ -130,11 +130,35 @@ jobs:
           -f guides/optimized-baseline/scheduler/optimized-baseline.values.yaml \
           -n ${NAMESPACE} --version v1.5.0
 
+        # Dedicated kube-prometheus-stack for WVA (TLS web :9090). Cluster may already have monitoring; this is namespaced.
+        WVA_PROM_NS="${NAMESPACE}-monitoring"
+        WVA_PROM_RELEASE=wva-nightly
+        kubectl create namespace "${WVA_PROM_NS}" --dry-run=client -o yaml | kubectl apply -f -
+        PROM_SVC="${WVA_PROM_RELEASE}-kube-prometheus-stack-prometheus.${WVA_PROM_NS}.svc.cluster.local"
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+          -subj "/CN=${PROM_SVC}" \
+          -keyout "${RUNNER_TEMP:-/tmp}/wva-prom-tls.key" \
+          -out "${RUNNER_TEMP:-/tmp}/wva-prom-tls.crt"
+        kubectl create secret tls prometheus-web-tls \
+          --cert="${RUNNER_TEMP:-/tmp}/wva-prom-tls.crt" --key="${RUNNER_TEMP:-/tmp}/wva-prom-tls.key" \
+          -n "${WVA_PROM_NS}" --dry-run=client -o yaml | kubectl apply -f -
+        helm repo add prometheus-community https://prometheus-community.github.io/helm-charts 2>/dev/null || true
+        helm repo update prometheus-community
+        helm upgrade --install "${WVA_PROM_RELEASE}" prometheus-community/kube-prometheus-stack \
+          --version 62.7.0 --namespace "${WVA_PROM_NS}" --skip-crds \
+          -f guides/workload-autoscaling/components/wva-nightly-prometheus-values.yaml
+        kubectl wait --for=condition=Available prometheus "${WVA_PROM_RELEASE}-kube-prometheus-stack-prometheus" \
+          -n "${WVA_PROM_NS}" --timeout=600s
+
         # Kustomization validation dry run
         kubectl kustomize guides/workload-autoscaling/wva-config/platform/cks >/dev/null
 
-        # apply WVA assets
+        # apply WVA assets (ConfigMap PROMETHEUS_BASE_URL default matches llm-d-nightly-wva; align if NAMESPACE differs)
         kubectl apply -k guides/workload-autoscaling/wva-config/platform/cks
+        PROM_URL="https://${WVA_PROM_RELEASE}-kube-prometheus-stack-prometheus.${WVA_PROM_NS}.svc.cluster.local:9090"
+        kubectl patch configmap workload-variant-autoscaler-wva-variantautoscaling-config \
+          -n "${WVA_DEPLOY_NS}" --type merge \
+          -p "$(jq -nc --arg u "${PROM_URL}" '{"data":{"PROMETHEUS_BASE_URL":$u}}')"
 
         # Base kustomize watches llm-d-optimized-baseline; nightly workloads live in ${NAMESPACE}.
         # Do not hardcode args[N]: upstream WVA chart order can change. Use one replica on CKS so

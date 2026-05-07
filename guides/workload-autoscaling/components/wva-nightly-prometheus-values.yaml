@@ -1,0 +1,52 @@
+# Minimal kube-prometheus-stack for WVA CKS nightlies (${NAMESPACE}-monitoring).
+# Prometheus web listens with TLS (requires Secret prometheus-web-tls in the namespace before helm upgrade).
+#
+# Matches default nightly convention: Helm release name wva-nightly, monitoring ns ${GUIDE_NS}-monitoring.
+# PROMETHEUS_BASE_URL may be rewritten by nightly-e2e-wva-cks custom_deploy_script if NAMESPACE differs.
+alertmanager:
+  enabled: false
+grafana:
+  enabled: false
+nodeExporter:
+  enabled: false
+defaultRules:
+  create: false
+kubeStateMetrics:
+  enabled: false
+prometheusOperator:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+prometheus:
+  service:
+    type: ClusterIP
+  prometheusSpec:
+    retention: 1d
+    resources:
+      requests:
+        cpu: 250m
+        memory: 1Gi
+      limits:
+        cpu: "2"
+        memory: 3Gi
+    scrapeInterval: 30s
+    evaluationInterval: 30s
+    serviceMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorSelector: {}
+    serviceMonitorNamespaceSelector: {}
+    podMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelector: {}
+    podMonitorNamespaceSelector: {}
+    web:
+      tlsConfig:
+        cert:
+          secret:
+            name: prometheus-web-tls
+            key: tls.crt
+        keySecret:
+          name: prometheus-web-tls
+          key: tls.key
