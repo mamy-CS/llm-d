@@ -130,51 +130,52 @@ jobs:
           -f guides/optimized-baseline/scheduler/optimized-baseline.values.yaml \
           -n ${NAMESPACE} --version v1.5.0
 
-        # Dedicated kube-prometheus-stack for WVA (TLS web :9090) in ${NAMESPACE}-monitoring.
-        # Match WVA deploy/lib/deploy_prometheus_kube_stack.sh: release name kube-prometheus-stack →
-        # Service/CR kube-prometheus-stack-prometheus (no 63-char truncation).
-        WVA_PROM_NS="${NAMESPACE}-monitoring"
-        WVA_PROM_RELEASE=kube-prometheus-stack
+        # kube-prometheus-stack: mirror WVA deploy/lib/deploy_prometheus_kube_stack.sh on this cluster.
+        # + deploy/lib/llm_d_nightly_install.sh CKS patch: nodeExporter.enabled=false (same as upstream nightly).
+        # Env names match WVA deploy/install.sh defaults (PROMETHEUS_SECRET_NAME=prometheus-web-tls, etc.).
+        MONITORING_NAMESPACE="${NAMESPACE}-monitoring"
+        PROMETHEUS_SECRET_NAME=prometheus-web-tls
+        PROMETHEUS_PORT=9090
         PROM_RESOURCE=kube-prometheus-stack-prometheus
-        kubectl create namespace "${WVA_PROM_NS}" --dry-run=client -o yaml | kubectl apply -f -
-        # Remove legacy release name if present (older llm-d nightlies used wva-nightly).
-        helm uninstall wva-nightly -n "${WVA_PROM_NS}" 2>/dev/null || true
+        kubectl create namespace "${MONITORING_NAMESPACE}" --dry-run=client -o yaml | kubectl apply -f -
+        helm uninstall wva-nightly -n "${MONITORING_NAMESPACE}" 2>/dev/null || true
         helm repo add prometheus-community https://prometheus-community.github.io/helm-charts 2>/dev/null || true
         helm repo update prometheus-community
-        PROM_SVC_FQDN="${PROM_RESOURCE}.${WVA_PROM_NS}.svc.cluster.local"
-        PROM_SVC_SHORT="${PROM_RESOURCE}.${WVA_PROM_NS}.svc"
-        # Same SAN pattern as WVA deploy_prometheus_kube_stack.sh (short CN; kubelet probes use TCP in values file).
-        openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+        openssl req -x509 -newkey rsa:2048 -nodes \
+          -keyout /tmp/prometheus-tls.key \
+          -out /tmp/prometheus-tls.crt \
+          -days 365 \
           -subj "/CN=prometheus" \
-          -addext "subjectAltName=DNS:${PROM_SVC_FQDN},DNS:${PROM_SVC_SHORT},DNS:prometheus,DNS:localhost" \
-          -keyout "${RUNNER_TEMP:-/tmp}/wva-prom-tls.key" \
-          -out "${RUNNER_TEMP:-/tmp}/wva-prom-tls.crt"
-        kubectl create secret tls prometheus-web-tls \
-          --cert="${RUNNER_TEMP:-/tmp}/wva-prom-tls.crt" --key="${RUNNER_TEMP:-/tmp}/wva-prom-tls.key" \
-          -n "${WVA_PROM_NS}" --dry-run=client -o yaml | kubectl apply -f -
-        helm upgrade --install "${WVA_PROM_RELEASE}" prometheus-community/kube-prometheus-stack \
-          --version 62.7.0 --namespace "${WVA_PROM_NS}" --skip-crds \
-          -f guides/workload-autoscaling/components/wva-nightly-prometheus-values.yaml
-        # Wait for Prometheus pods (not only CR condition=Available — some operator versions lag or omit it).
-        PROM_WAIT_OK=0
-        for attempt in $(seq 1 24); do
-          echo "--- Waiting for Prometheus pod Ready (${attempt}/24, ns=${WVA_PROM_NS}, cr=${PROM_RESOURCE}) ---"
-          kubectl get prometheus,statefulset,pods -n "${WVA_PROM_NS}" -o wide 2>/dev/null || true
-          if kubectl wait pod -n "${WVA_PROM_NS}" \
-              -l "operator.prometheus.io/name=${PROM_RESOURCE}" \
-              --for=condition=Ready --timeout=25s 2>/dev/null; then
-            PROM_WAIT_OK=1
-            break
-          fi
-          sleep 5
-        done
-        if [ "${PROM_WAIT_OK}" != 1 ]; then
-          echo "::group::WVA nightly Prometheus not Ready"
-          kubectl get prometheus -n "${WVA_PROM_NS}" -o wide || true
-          kubectl describe prometheus "${PROM_RESOURCE}" -n "${WVA_PROM_NS}" || true
-          kubectl describe pods -n "${WVA_PROM_NS}" -l "operator.prometheus.io/name=${PROM_RESOURCE}" || true
-          kubectl logs -n "${WVA_PROM_NS}" -l "operator.prometheus.io/name=${PROM_RESOURCE}" --all-containers=true --tail=200 --prefix=true 2>/dev/null || true
-          kubectl get events -n "${WVA_PROM_NS}" --sort-by='.lastTimestamp' | tail -40 || true
+          -addext "subjectAltName=DNS:${PROM_RESOURCE}.${MONITORING_NAMESPACE}.svc.cluster.local,DNS:${PROM_RESOURCE}.${MONITORING_NAMESPACE}.svc,DNS:prometheus,DNS:localhost"
+        kubectl create secret tls "${PROMETHEUS_SECRET_NAME}" \
+          --cert=/tmp/prometheus-tls.crt \
+          --key=/tmp/prometheus-tls.key \
+          -n "${MONITORING_NAMESPACE}" \
+          --dry-run=client -o yaml | kubectl apply -f -
+        rm -f /tmp/prometheus-tls.key /tmp/prometheus-tls.crt
+        HELM_PROM_EC=0
+        helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack \
+          -n "${MONITORING_NAMESPACE}" \
+          --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false \
+          --set prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false \
+          --set prometheus.service.type=ClusterIP \
+          --set prometheus.service.port="${PROMETHEUS_PORT}" \
+          --set prometheus.prometheusSpec.web.tlsConfig.cert.secret.name="${PROMETHEUS_SECRET_NAME}" \
+          --set prometheus.prometheusSpec.web.tlsConfig.cert.secret.key=tls.crt \
+          --set prometheus.prometheusSpec.web.tlsConfig.keySecret.name="${PROMETHEUS_SECRET_NAME}" \
+          --set prometheus.prometheusSpec.web.tlsConfig.keySecret.key=tls.key \
+          --set grafana.enabled=false \
+          --set alertmanager.enabled=false \
+          --set nodeExporter.enabled=false \
+          --timeout=10m \
+          --wait || HELM_PROM_EC=$?
+        if [ "${HELM_PROM_EC}" != 0 ]; then
+          echo "::group::WVA nightly Prometheus helm failed (mirror deploy_prometheus_kube_stack.sh)"
+          kubectl get prometheus,statefulset,pods -n "${MONITORING_NAMESPACE}" -o wide 2>/dev/null || true
+          kubectl describe prometheus "${PROM_RESOURCE}" -n "${MONITORING_NAMESPACE}" || true
+          kubectl describe pods -n "${MONITORING_NAMESPACE}" -l "operator.prometheus.io/name=${PROM_RESOURCE}" || true
+          kubectl logs -n "${MONITORING_NAMESPACE}" -l "operator.prometheus.io/name=${PROM_RESOURCE}" --all-containers=true --tail=200 --prefix=true 2>/dev/null || true
+          kubectl get events -n "${MONITORING_NAMESPACE}" --sort-by='.lastTimestamp' | tail -40 || true
           echo "::endgroup::"
           exit 1
         fi
@@ -184,7 +185,7 @@ jobs:
 
         # apply WVA assets (ConfigMap PROMETHEUS_BASE_URL default matches llm-d-nightly-wva; align if NAMESPACE differs)
         kubectl apply -k guides/workload-autoscaling/wva-config/platform/cks
-        PROM_URL="https://${PROM_RESOURCE}.${WVA_PROM_NS}.svc.cluster.local:9090"
+        PROM_URL="https://${PROM_RESOURCE}.${MONITORING_NAMESPACE}.svc.cluster.local:9090"
         kubectl patch configmap workload-variant-autoscaler-wva-variantautoscaling-config \
           -n "${WVA_DEPLOY_NS}" --type merge \
           -p "$(jq -nc --arg u "${PROM_URL}" '{"data":{"PROMETHEUS_BASE_URL":$u}}')"
