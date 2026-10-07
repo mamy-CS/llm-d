@@ -1,0 +1,36 @@
+# inference-perf workload for the keda-epp queue signal (see BENCHMARK.md).
+#
+# A constant-rate staged ramp that climbs past the pool's serving capacity so
+# the EPP flow-control queue goes non-zero, then drains back down. The queue
+# signal drives scaling off queue depth and running requests; latency is
+# reported, not graded.
+#
+# Tune the rates and token counts per model/GPU. If
+# llm_d_epp_flow_control_queue_size never goes non-zero during the run, the ramp
+# never saturated a replica - raise the peak rate and the output-token count
+# until the queue builds. Values below are a starting point for Qwen3-32B TP=2.
+load:
+  type: constant
+  stages:
+  - {rate: 4,  duration: 300}
+  - {rate: 8,  duration: 300}
+  - {rate: 12, duration: 300}
+  - {rate: 16, duration: 300}
+  - {rate: 8,  duration: 300}
+  - {rate: 2,  duration: 300}
+  request_timeout: 900
+api:
+  type: completion
+  streaming: true
+server:
+  type: vllm
+  model_name: REPLACE_ENV_LLMDBENCH_DEPLOY_CURRENT_MODEL
+  base_url: REPLACE_ENV_LLMDBENCH_HARNESS_STACK_ENDPOINT_URL
+  ignore_eos: true
+tokenizer: {pretrained_model_name_or_path: REPLACE_ENV_LLMDBENCH_DEPLOY_CURRENT_MODEL}
+data:
+  type: random
+  input_distribution:  {min: 1800, max: 2200, mean: 2000, std_dev: 150, total_count: 8000}
+  output_distribution: {min: 900,  max: 1100, mean: 1000, std_dev: 80,  total_count: 8000}
+report: {request_lifecycle: {summary: true, per_stage: true, per_request: true}}
+storage: {local_storage: {path: /workspace}}

@@ -1,0 +1,7 @@
+# Python dependencies for plot_run.py.
+# Everything else it uses (json, math, os, sys, datetime, urllib) is in the
+# standard library. Prometheus is reached over HTTP at PROM_URL (default
+# http://localhost:9090), so make it reachable first - e.g. kubectl port-forward
+# the bundled Prometheus (generic k8s) or the Thanos Querier (OpenShift). See
+# BENCHMARK.md.
+matplotlib>=3.5

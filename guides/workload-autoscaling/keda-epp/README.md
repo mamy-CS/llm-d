@@ -471,6 +471,25 @@ model is loading.
 After the additional replica is Ready, repeat a normal inference request and
 confirm it succeeds.
 
+## Benchmark
+
+The bounded load above is a smoke test: it proves the autoscaler makes a
+scale-up decision, not how the pool behaves under a sustained ramp. To measure
+that - whether the queue signal adds and removes replicas as demand rises and
+falls, and at what replica cost relative to a static pool sized for peak - use
+the reusable harness in
+[`benchmark-templates/`](benchmark-templates/): a
+[staged inference-perf ramp](benchmark-templates/queue-ramp-config.yml) driven
+by [llm-d-benchmark](https://github.com/llm-d/llm-d-benchmark), plus a
+[plot script](benchmark-templates/plot_run.py) that charts the two scaling
+signals against their thresholds, pool saturation, and replicas over the run.
+Full methodology is in
+[`benchmark-templates/BENCHMARK.md`](benchmark-templates/BENCHMARK.md).
+
+This covers the **queue** signal only; the saturation signal is experimental and
+not benchmarked yet. No run is published at the moment - follow-up will
+commit one to [`benchmark-results/`](benchmark-results/).
+
 ## Troubleshooting
 
 ### ScaledObject is not Ready
