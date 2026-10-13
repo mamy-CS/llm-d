@@ -30,6 +30,14 @@ scaleUp window makes that cost 66% goodput, a tuned scale-up makes it 94% (near 
 - Note: the tuned arm changed BOTH knobs (window 300->0 and policy Percent/100->Pods/1); window=0 kills
   the delay, Pods/1 kills the overshoot. This run does not isolate their individual contributions.
 
+## In token space (demand vs free capacity)
+plots/demand_vs_capacity.png - peak requests waiting (backpressure) = 0 (static) / 122 (as-shipped, the
+single replica hits 100% KV during the delay, all waiting reason="capacity") / 3 (tuned). [VERIFIED from
+thanos.] Caveat: KV tokens is only ONE dimension and is NOT the steady-load binding one here - TPOT
+(decode batch) is (static uses ~17% KV yet its goodput loss is TPOT, not TTFT). KV binds only under the
+as-shipped overload; at the provisioned peak TPOT binds and the free KV is not reclaimable, so the GPU
+savings come from low-load stages, not the peak. Prefill-heavy load would bind on prefill compute (a 3rd axis).
+
 ## Takeaway
 The bottleneck is the scaleUp window default, not autoscaling. Immediate + rate-limited scale-up keeps
 the GPU savings and recovers the goodput. Pre-staging + warm-pool/FMA shrink the remaining gap.

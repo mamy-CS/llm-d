@@ -19,6 +19,6 @@ static's 97%) at the same GPU saving. The scaleUp config (stabilization window +
 ## Contents
 - [SUMMARY.md](SUMMARY.md) - one page.
 - [FINDINGS.md](FINDINGS.md) - decision-grade conclusions + method + caveats.
-- [plots/](plots/) - replicas+saturation over time; goodput-vs-GPU tradeoff.
+- [plots/](plots/) - replicas+saturation over time; goodput-vs-GPU tradeoff; demand-vs-free-capacity in KV tokens (peak requests waiting 0 / 122 / 3).
 - `static/`, `auto-asshipped/`, `auto-tuned/` - per-arm BRV0.2 stage reports + `summary_lifecycle_metrics.json` (the computed goodput).
 - [config/](config/) - the calibrated workload (`queue-ramp-v2.yaml`).

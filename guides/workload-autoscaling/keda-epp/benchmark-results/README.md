@@ -16,7 +16,7 @@ autoscaled with the as-shipped 300s scaleUp window, and autoscaled with a tuned 
 Start here:
 - [SUMMARY.md](2026-10-13-autoscaled-vs-static-v2/SUMMARY.md) - one page.
 - [FINDINGS.md](2026-10-13-autoscaled-vs-static-v2/FINDINGS.md) - decision-grade.
-- [plots/](2026-10-13-autoscaled-vs-static-v2/plots/) - replicas+saturation over time, goodput-vs-GPU.
+- [plots/](2026-10-13-autoscaled-vs-static-v2/plots/) - replicas+saturation over time, goodput-vs-GPU, demand-vs-free-capacity in KV tokens.
 - `{static,auto-asshipped,auto-tuned}/` - BRV0.2 reports + summary (goodput); `config/` - the workload.
 
 Headline: queue autoscaling saves ~43% GPU-minutes vs static; the default 300s scaleUp window costs

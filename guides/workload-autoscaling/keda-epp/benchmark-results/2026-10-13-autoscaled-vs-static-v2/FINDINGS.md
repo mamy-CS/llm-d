@@ -76,6 +76,31 @@ it does **not** overshoot to max. Goodput 94.3% (vs 66%), 18 failures (vs 269), 
 all at the **same 126 replica-min** as the as-shipped arm. The gradual climb let a small backlog push it
 to 6 briefly; a minor, self-correcting effect.
 
+## 4. The same story in token space: demand vs free capacity [PROVEN LIVE]
+Seen in the capacity dimension that actually binds a decode server - KV-cache tokens - the three arms
+are unambiguous (plots/demand_vs_capacity.png; backfilled from vLLM `kv_cache_usage_perc` x the
+per-replica KV budget of 319,920 tokens, with `num_requests_waiting` as the unmet-demand/backpressure
+overlay):
+- Static: KV demand never exceeds ~17% of pooled capacity; **peak requests waiting = 0**.
+- As-shipped: capacity is stuck at one replica's 319,920 tokens while demand presses in, so the replica
+  hits **100% KV** and **peak requests waiting = 122, all `reason="capacity"`** (KV exhaustion; deferred=0)
+  during the delay - then capacity jumps to the 8-replica ceiling (overshoot). [VERIFIED from thanos:
+  single-replica kv_cache_usage_perc = 1.0 through the delay; num_requests_waiting_by_reason{capacity}.]
+- Tuned: capacity ramps up tracking demand; free capacity stays positive; **peak requests waiting = 3**.
+
+IMPORTANT - what the free KV capacity does and does NOT mean:
+KV tokens is only ONE capacity dimension. For this workload it is **not** the binding one at steady load -
+**TPOT (decode latency, set by batch size) is**. Evidence: static peak uses only ~17% KV yet its goodput
+loss is TPOT, not TTFT (tpot_attainment 96.7% vs ttft 99.96%); 80 concurrent requests need ~0.84 of a
+SINGLE replica's KV, so KV alone says "~1 replica", but 80 concurrent on 1 replica would blow TPOT. The
+pool runs 5 at peak because the running=16 trigger effectively sizes for decode BATCH/TPOT, not KV. So:
+- KV becomes binding only under the as-shipped OVERLOAD (1 replica, in-flight 200+ -> 100% KV); that is
+  the delay catastrophe and it is genuinely KV-bound.
+- At the properly-provisioned peak, TPOT binds and KV has headroom, so the free KV is NOT reclaimable by
+  scaling down at peak. The GPU savings come from the LOW-load stages (1 replica vs 5), not the peak.
+A prefill-heavy workload would bind on prefill compute instead - a third axis. `demand` in the plot =
+admitted (used KV); the waiting overlay is the unmet part.
+
 ## Cold start (context, not the finding)
 That cold start hurts scale-up is well known. We pre-staged weights (PVC-backed HF cache; the standard
 `guides/recipes/modelserver/components/model-cache` pattern) so the measured cold start is the normal
