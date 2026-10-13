@@ -76,24 +76,32 @@ it does **not** overshoot to max. Goodput 94.3% (vs 66%), 18 failures (vs 269), 
 all at the **same 126 replica-min** as the as-shipped arm. The gradual climb let a small backlog push it
 to 6 briefly; a minor, self-correcting effect.
 
-## 4. The same story in token space: demand vs free capacity [PROVEN LIVE]
-Seen in the capacity dimension that actually binds a decode server - KV-cache tokens - the three arms
-are unambiguous (plots/demand_vs_capacity.png; backfilled from vLLM `kv_cache_usage_perc` x the
-per-replica KV budget of 319,920 tokens, with `num_requests_waiting` as the unmet-demand/backpressure
-overlay):
-- Static: KV demand never exceeds ~17% of pooled capacity; **peak requests waiting = 0**.
-- As-shipped: capacity is stuck at one replica's 319,920 tokens while demand presses in, so the replica
-  hits **100% KV** and **peak requests waiting = 122, all `reason="capacity"`** (KV exhaustion; deferred=0)
-  during the delay - then capacity jumps to the 8-replica ceiling (overshoot). [VERIFIED from thanos:
-  single-replica kv_cache_usage_perc = 1.0 through the delay; num_requests_waiting_by_reason{capacity}.]
-- Tuned: capacity ramps up tracking demand; free capacity stays positive; **peak requests waiting = 3**.
+## 4. The same story in token space: KV supply vs KV in use + unmet demand [PROVEN LIVE]
+plots/demand_vs_capacity.png. METRIC + LABELS (Lionel's correction): the red area is KV **in use** =
+`sum(vllm:kv_cache_usage_perc) x 319,920 tokens` - i.e. admitted/running work's KV footprint, NOT demand.
+True demand = in use + what is QUEUED, so the honest demand signal is the `num_requests_waiting` overlay
+("unmet demand"); the red area is utilization/supply-consumed. (Caveat per Abhishek: kv_cache_usage_perc
+also counts prefix-CACHED blocks; our run used random prompts so prompt_tokens cached=0, but in general
+cached must be subtracted, and you cannot know a queued request's footprint until it is scheduled - an
+EPP prefix-cache-aware plugin estimates it. The right long-term source is router/EPP internal demand
+metrics; some are logged but not yet Prometheus-exposed -> reuse them and PR the exposure rather than
+reconstruct from vLLM. This plot is the vLLM-exposed approximation available today.)
+- Static: KV in use never exceeds ~17% of pooled supply; **peak requests waiting = 0**.
+- As-shipped: supply is stuck at one replica's 319,920 tokens, the replica hits **100% KV**, and **peak
+  requests waiting = 122, all `reason="capacity"`** (KV exhaustion; deferred=0) during the delay - then
+  supply jumps to the 8-replica ceiling (overshoot). [VERIFIED from thanos: single-replica
+  kv_cache_usage_perc = 1.0 through the delay; num_requests_waiting_by_reason{capacity}.]
+- Tuned: supply ramps up tracking load; free KV stays positive; **peak requests waiting = 3**.
 
 IMPORTANT - what the free KV capacity does and does NOT mean:
 KV tokens is only ONE capacity dimension. For this workload it is **not** the binding one at steady load -
 **TPOT (decode latency, set by batch size) is**. Evidence: static peak uses only ~17% KV yet its goodput
 loss is TPOT, not TTFT (tpot_attainment 96.7% vs ttft 99.96%); 80 concurrent requests need ~0.84 of a
 SINGLE replica's KV, so KV alone says "~1 replica", but 80 concurrent on 1 replica would blow TPOT. The
-pool runs 5 at peak because the running=16 trigger effectively sizes for decode BATCH/TPOT, not KV. So:
+pool runs 5 at peak because the running=16 trigger effectively sizes for decode BATCH/TPOT, not KV -
+i.e. it is sized so demand is satisfied immediately (low latency), which is exactly why KV looks
+massively over-supplied (Lionel: "too much supply for the demand ... makes sense for this KEDA config,
+demand satisfied immediately"). So:
 - KV becomes binding only under the as-shipped OVERLOAD (1 replica, in-flight 200+ -> 100% KV); that is
   the delay catastrophe and it is genuinely KV-bound.
 - At the properly-provisioned peak, TPOT binds and KV has headroom, so the free KV is NOT reclaimable by
