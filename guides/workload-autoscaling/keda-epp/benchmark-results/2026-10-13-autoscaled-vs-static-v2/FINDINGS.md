@@ -32,6 +32,28 @@ PR #2022, verified on origin/main). GPU = replica-minutes integrated over the ac
 
 See plots/replicas_saturation.png (the mechanism) and plots/goodput_vs_gpu.png (the tradeoff).
 
+## How "peak" is defined (the static baseline's replica count)
+Peak is not a constant - it is defined per workload as the replica count the keda-epp control law
+converges to at the peak offered load:
+
+  peak = ceil( sustained in-flight requests at peak load / running-trigger target )
+
+We measured it in calibration (scaleUp window=0 so the pool tracks demand without lag): at the peak
+rate (2.0 req/s) sustained in-flight settled at ~76-80, running-trigger target = 16/replica ->
+ceil(80/16) = **5**. Static is pinned min=max=5.
+
+Both inputs are **load-type-dependent**, so peak is too:
+- sustained in-flight = arrival-rate x request latency (Little's law), and request latency depends on
+  token shape (ISL/OSL, prefill vs decode balance);
+- the running target is a fixed COUNT (16), which maps to different real capacity per load type - short
+  requests: one replica serves hundreds; long-context: KV cache caps it ~8.
+
+Therefore peak is reported WITH the load type that produced it (here: random symmetrical 2048/2048).
+A prefill- or decode-heavy workload at the same arrival rate lands on a different peak. This
+load-sensitivity of a fixed count trigger is itself an argument for the token-aware / KV-based signal.
+Note this is "demand at the count target", distinct from "peak sized to guarantee the SLO" (static-5
+hit 96.7% goodput, not 100% - an SLO-sized peak here would be ~6; a separate sizing definition).
+
 ## 1. Autoscaling saves ~43% of GPU-minutes [PROVEN LIVE]
 The ramp needs 5 replicas only at peak; at low load 1 suffices. Static pays for 5 the whole time
 (220 replica-min); both autoscaled arms run ~1 at low load and scale for the peak (126 replica-min,

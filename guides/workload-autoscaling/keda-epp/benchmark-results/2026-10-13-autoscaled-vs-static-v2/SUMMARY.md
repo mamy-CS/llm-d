@@ -10,6 +10,9 @@ scaleUp window makes that cost 66% goodput, a tuned scale-up makes it 94% (near 
 - Load: open-loop Poisson ramp, low -> peak 2.0 req/s -> low (~43 min), random 2048/2048 tokens.
 - Goodput SLO: TTFT<=2s AND TPOT<=50ms (llm-d-benchmark autoscaling default, PR #2022). Harness 0.8.0.
 - Calibrated so the pool settles at a mid-range desired ~5 at peak (not pinned at max).
+- "Peak" = ceil(sustained in-flight at peak load / running target 16) = ceil(~80/16) = 5 here. It is
+  load-type-dependent (depends on token shape via request latency + the fixed count target), so it is
+  reported WITH this load type (symmetrical 2048/2048); see FINDINGS "How peak is defined".
 
 ## Result
 | Arm | Goodput | Fail | GPU replica-min | peak replicas |
