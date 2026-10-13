@@ -1,7 +1,7 @@
 # Summary - keda-epp queue autoscaling vs static (v2)
 
 **One line:** keda-epp queue autoscaling saves ~43% of GPU-minutes vs static-at-peak; the default 300s
-scaleUp window makes that cost 66% goodput, a tuned window makes it 94% (near static's 97%) for free.
+scaleUp window makes that cost 66% goodput, a tuned scale-up makes it 94% (near static's 97%) for free.
 
 ## Setup
 - Qwen3-32B, TP=2, 2x H100-80GB, vLLM, monolithic decode (not P/D). EPP flow-control on.
@@ -16,14 +16,16 @@ scaleUp window makes that cost 66% goodput, a tuned window makes it 94% (near st
 |-----|--------:|-----:|----------------:|--------------:|
 | Static (pinned 5) | 96.7% | 0 | 220 | 5 fixed |
 | Autoscaled, 300s window (default) | 66.0% | 269 | 126 (-43%) | 1->8->5 |
-| Autoscaled, tuned window | 94.3% | 18 | 126 (-43%) | 1->5-6 |
+| Autoscaled, tuned scale-up | 94.3% | 18 | 126 (-43%) | 1->5-6 |
 
 ## Why
 - Savings come from running 1 replica at low load instead of 5.
 - The 300s window held desired=1 for ~4-5 min while one replica hit 10-17x saturation (TTFT p99 92s),
   then overshot to max 8. That delay is the goodput killer.
-- Tuned window (window 0 + Pods/1 per 180s = one pod at a time, paced to the 186s cold start) scales up
-  immediately and gradually: peak saturation ~2.2, no overshoot, goodput back to 94%.
+- Tuned scale-up (window 0 + Pods/1 per 180s = one pod at a time, paced to the 186s cold start) scales
+  up immediately and gradually: peak saturation ~2.2, no overshoot, goodput back to 94%.
+- Note: the tuned arm changed BOTH knobs (window 300->0 and policy Percent/100->Pods/1); window=0 kills
+  the delay, Pods/1 kills the overshoot. This run does not isolate their individual contributions.
 
 ## Takeaway
 The bottleneck is the scaleUp window default, not autoscaling. Immediate + rate-limited scale-up keeps

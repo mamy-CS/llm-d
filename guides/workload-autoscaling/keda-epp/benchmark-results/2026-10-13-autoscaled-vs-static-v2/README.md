@@ -7,14 +7,14 @@ autoscaled as-shipped (300s scaleUp window), autoscaled tuned (Pods/1 @180s).
 
 **Headline:** queue autoscaling saves ~43% GPU-minutes vs static-at-peak. The default 300s scaleUp
 window costs that as 66% goodput (delayed scale-up -> 1 replica at 10-17x saturation, then overshoot to
-max 8); a tuned window (immediate + one pod at a time, paced to the cold start) gets 94% goodput (vs
-static's 97%) at the same GPU saving. The scaleUp window is the lever, not autoscaling itself.
+max 8); a tuned scale-up (immediate + one pod at a time, paced to the cold start) gets 94% goodput (vs
+static's 97%) at the same GPU saving. The scaleUp config (stabilization window + rate policy) is the lever, not autoscaling itself; this run changed both together and does not isolate their individual effects.
 
 | Arm | Goodput | Failures | GPU replica-min | peak replicas |
 |-----|--------:|---------:|----------------:|--------------:|
 | Static (pinned 5) | 96.7% | 0 | 220 | 5 fixed |
 | Autoscaled, 300s window | 66.0% | 269 | 126 (-43%) | 1->8->5 |
-| Autoscaled, tuned window | 94.3% | 18 | 126 (-43%) | 1->5-6 |
+| Autoscaled, tuned scale-up | 94.3% | 18 | 126 (-43%) | 1->5-6 |
 
 ## Contents
 - [SUMMARY.md](SUMMARY.md) - one page.

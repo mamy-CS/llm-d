@@ -12,7 +12,7 @@ depends entirely on **one setting - the scaleUp stabilization window**:
 - The **as-shipped 300s window** pays a brutal quality price: **goodput 66%** (vs static's 97%), 269
   failed requests, TTFT p99 **92s**. The window delays scale-up so a single replica drowns, then the
   pool overshoots to max.
-- A **tuned window** (scale up immediately, one pod at a time paced to the cold start) delivers the
+- A **tuned scale-up** (scale up immediately, one pod at a time paced to the cold start) delivers the
   **same ~43% GPU saving at 94% goodput** - within ~2 points of static, 18 failures, TTFT p99 14s.
 
 So the problem is not autoscaling; it is the default scaleUp window. Fixing it recovers ~28 points of
@@ -28,7 +28,7 @@ PR #2022, verified on origin/main). GPU = replica-minutes integrated over the ac
 |-----|--------:|---------:|----------------:|----------------:|--------------:|--------------:|
 | Static (pinned 5) | **96.7%** | 0 | 0.17 / 0.34s | 220 | 5.00 | 5 (fixed) |
 | Autoscaled, 300s window (as-shipped) | **66.0%** | 269 | 16.1 / 91.6s | 126 (-43%) | 2.9 | 1->**8**->5 |
-| Autoscaled, tuned window | **94.3%** | 18 | 0.48 / 13.9s | 126 (-43%) | 2.9 | 1->5-6 |
+| Autoscaled, tuned scale-up | **94.3%** | 18 | 0.48 / 13.9s | 126 (-43%) | 2.9 | 1->5-6 |
 
 See plots/replicas_saturation.png (the mechanism) and plots/goodput_vs_gpu.png (the tradeoff).
 
@@ -46,7 +46,7 @@ straight to **max (8)**, not the needed 5, before settling back. So the default 
 worst of both: a long quality outage during the delay AND transient over-provisioning after it.
 This is the same class of problem behind the earlier overshoot work; here it is quantified end-to-end.
 
-## 3. A tuned window recovers almost all of it, for free [PROVEN LIVE]
+## 3. A tuned scale-up recovers almost all of it, for free [PROVEN LIVE]
 Config: scaleUp `stabilizationWindowSeconds: 0` + `policies: [{type: Pods, value: 1, periodSeconds: 180}]`
 (one pod at a time, paced to the measured ~186s cold start). The pool starts scaling immediately at
 peak onset and climbs 1->2->3->4->5 smoothly; peak saturation tops out at **~2.2 briefly** (vs 17) and
@@ -76,6 +76,10 @@ ramp near-instant; out of scope here.
   arms (the scale-up lag). TPOT attainment was ~95-97% across all arms.
 
 ### Caveats
+- The tuned arm changed TWO knobs at once: stabilization window (300s -> 0) AND rate policy
+  (Percent/100 -> Pods/1 per 180s). By mechanism, window=0 removes the ~4-5 min scale-up delay and
+  Pods/1 removes the overshoot-to-max; but this run does NOT isolate their individual contributions
+  (no window-only or policy-only arm). The claim is about the combined scaleUp config, not the window alone.
 - Two brackets measured (static vs the two autoscaled configs) at one calibrated operating point; not a
   full rate sweep. Mid-points are interpolated.
 - The tuned arm's ~18 failures are a scale-DOWN artifact: when the pool shrank for the low stage, a few
