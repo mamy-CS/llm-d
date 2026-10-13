@@ -1,0 +1,38 @@
+# v2 MEASURED ramp - autoscaled vs static, both pre-staged. Poisson + goodput-gated.
+# RATES BELOW ARE PLACEHOLDERS - set the peak from Pass 1 calibration so the autoscaled
+# pool settles desired ~4-5 (edit, or override: --overrides load.stages.2.rate=<R>).
+# Shape: warmup -> rise -> peak-hold -> fall. Each stage 600s (>= 2x the as-shipped 300s
+# scaleUp window) so the loop acts and settles, not the rate limiter. Same file drives
+# all 3 measured arms (static, autoscaled-as-shipped, autoscaled-tuned) for comparability.
+# Open-loop Poisson, random (uncached) prompts, symmetrical 2048/2048 token shape.
+load:
+  type: poisson
+  interval: 30.0
+  stages:
+  - {rate: 0.3, duration: 600}    # low baseline (desired ~1-2) - the savings window
+  - {rate: 2.0, duration: 1200}   # sustained peak R=2.0 (calibrated desired ~5): the 1->5 jump
+                                   # exposes cold-start lag; the sustained hold exposes the
+                                   # as-shipped 300s-window overshoot-to-max behavior
+  - {rate: 0.3, duration: 600}    # low again (scale-down + savings)
+  request_timeout: 600.0
+api: {type: completion, streaming: true}
+server:
+  type: vllm
+  model_name: REPLACE_ENV_LLMDBENCH_DEPLOY_CURRENT_MODEL
+  base_url: REPLACE_ENV_LLMDBENCH_HARNESS_STACK_ENDPOINT_URL
+  ignore_eos: true
+tokenizer: {pretrained_model_name_or_path: REPLACE_ENV_LLMDBENCH_DEPLOY_CURRENT_MODEL}
+data:
+  type: random
+  input_distribution:  {min: 2048, max: 2048, mean: 2048, std_dev: 0}
+  output_distribution: {min: 2048, max: 2048, mean: 2048, std_dev: 0}
+report:
+  request_lifecycle: {summary: true, per_stage: true, per_request: true}
+  # Primary SLO - verbatim from llm-d-benchmark origin/main token-aware autoscaling
+  # profile default (PR #2022). "good" = meets BOTH constraints (seconds).
+  # Secondary cross-check (3s/100ms P90, slo-aware) is computed post-hoc from per-request data.
+  goodput:
+    constraints:
+      ttft: 2
+      tpot: 0.05
+storage: {local_storage: {path: /workspace}}
