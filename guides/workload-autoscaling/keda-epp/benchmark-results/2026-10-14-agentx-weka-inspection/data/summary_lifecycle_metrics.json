@@ -1,132 +1,132 @@
 {
-  "benchmark_time_seconds": 61.11314760101959,
+  "benchmark_time_seconds": 64.32893808395602,
   "load_summary": {
-    "count": 134,
+    "count": 141,
     "schedule_delay": {
-      "mean": 10.249870554345083,
-      "min": 0.023014076985418797,
-      "max": 51.71503552107606,
-      "p0.1": 0.02312448961089831,
-      "p1": 0.02456216964288615,
-      "p5": 0.032142183248652145,
-      "p10": 0.03771738456562161,
-      "p25": 0.07731202882132493,
-      "median": 4.694895146472845,
-      "p75": 13.83989989120164,
-      "p90": 27.92939872030403,
-      "p95": 40.737411137792506,
-      "p99": 48.26851736860233,
-      "p99.9": 51.256698654209444
+      "mean": 7.599794393591087,
+      "min": 0.022771495976485312,
+      "max": 49.10575191595126,
+      "p0.1": 0.022907139325980097,
+      "p1": 0.02464288263581693,
+      "p5": 0.031258522998541594,
+      "p10": 0.03884248109534383,
+      "p25": 0.09113748406525701,
+      "median": 1.0485993409529328,
+      "p75": 6.291833546943963,
+      "p90": 29.4384879990248,
+      "p95": 42.577783453976735,
+      "p99": 48.52130350277293,
+      "p99.9": 49.049723209519875
     }
   },
   "successes": {
-    "count": 67,
+    "count": 72,
     "latency": {
       "request_latency": {
-        "mean": 14.164453699138821,
-        "min": 4.498487806995399,
-        "max": 36.076236914959736,
-        "p0.1": 4.694220253045904,
-        "p1": 6.455812267500441,
-        "p5": 8.212905881658662,
-        "p10": 9.500260605034418,
-        "p25": 13.325767153000925,
-        "median": 13.670613163034432,
-        "p75": 13.868415096483659,
-        "p90": 19.2355792674236,
-        "p95": 20.733035595703406,
-        "p99": 28.515375720935445,
-        "p99.9": 35.32015079555744
+        "mean": 5.949105701320352,
+        "min": 0.3924928130581975,
+        "max": 22.852871947921813,
+        "p0.1": 0.39621550926344934,
+        "p1": 0.429719775110716,
+        "p5": 0.7776426130207256,
+        "p10": 0.9627717866096646,
+        "p25": 1.4853121595515404,
+        "median": 3.2083723484538496,
+        "p75": 8.664922855503391,
+        "p90": 17.118483136687427,
+        "p95": 19.504061105515582,
+        "p99": 22.136004786046694,
+        "p99.9": 22.7811852317343
       },
       "normalized_time_per_output_token": {
-        "mean": 0.37279572100517444,
-        "min": 0.01903570266832404,
-        "max": 1.1287901535009344,
-        "p0.1": 0.019045544693810923,
-        "p1": 0.019134122923192862,
-        "p5": 0.021303058084959442,
-        "p10": 0.022426903305992077,
-        "p25": 0.037542081673016515,
-        "median": 0.4611488878338908,
-        "p75": 0.5652795771869326,
-        "p90": 0.664059453945873,
-        "p95": 0.7159600969434617,
-        "p99": 1.0189728409455474,
-        "p99.9": 1.1178084222453974
+        "mean": 0.06171510980429261,
+        "min": 0.016674198388505927,
+        "max": 0.29920331383810234,
+        "p0.1": 0.016701439329919188,
+        "p1": 0.016946607802638552,
+        "p5": 0.019138976146045716,
+        "p10": 0.021432708852214388,
+        "p25": 0.022687018639719114,
+        "median": 0.038384130706365864,
+        "p75": 0.09294907064759172,
+        "p90": 0.1281418585095865,
+        "p95": 0.14323818195673607,
+        "p99": 0.2257119453921022,
+        "p99.9": 0.29185417699350247
       },
       "time_per_output_token": {
-        "mean": 0.07547850177086804,
-        "min": 0.0077271823344441755,
-        "max": 0.5310482990413826,
-        "p0.1": 0.00844033667975132,
-        "p1": 0.014858725787515605,
-        "p5": 0.020092725608242757,
-        "p10": 0.021029793698875004,
-        "p25": 0.023091181434435164,
-        "median": 0.032845629158576854,
-        "p75": 0.07418970390403495,
-        "p90": 0.13433643466568304,
-        "p95": 0.3343803481914025,
-        "p99": 0.45659563912597795,
-        "p99.9": 0.5236030330498435
+        "mean": 0.022345727397896364,
+        "min": 0.0157734404541164,
+        "max": 0.1250391077224372,
+        "p0.1": 0.015786526375898953,
+        "p1": 0.015904299671941922,
+        "p5": 0.0163989252717404,
+        "p10": 0.017209954218803128,
+        "p25": 0.018275509290914566,
+        "median": 0.020194096061110167,
+        "p75": 0.022061252327981243,
+        "p90": 0.025439820949288053,
+        "p95": 0.029661062376918186,
+        "p99": 0.06803029543911973,
+        "p99.9": 0.11933822649410557
       },
       "time_to_first_token": {
-        "mean": 7.822564936378526,
-        "min": 0.147717364015989,
-        "max": 13.494346978957765,
-        "p0.1": 0.14955548796989024,
-        "p1": 0.16609860355500133,
-        "p5": 0.20382025607395918,
-        "p10": 0.32579805760178715,
-        "p25": 1.9784061324899085,
-        "median": 11.648782607051544,
-        "p75": 12.007735769962892,
-        "p90": 12.794132869434543,
-        "p95": 12.854140327940694,
-        "p99": 13.078359962035904,
-        "p99.9": 13.452748277265586
+        "mean": 1.2169006308071806,
+        "min": 0.06105280900374055,
+        "max": 3.4339628049638122,
+        "p0.1": 0.06112891135062091,
+        "p1": 0.06181383247254416,
+        "p5": 0.13097205957747066,
+        "p10": 0.21101553682237864,
+        "p25": 0.3908213420363609,
+        "median": 0.9467902039759792,
+        "p75": 2.062508583505405,
+        "p90": 2.7244812013581394,
+        "p95": 2.789608724298887,
+        "p99": 3.3634453301923357,
+        "p99.9": 3.426911057486665
       },
       "inter_token_latency": {
-        "mean": 0.03257928274656308,
-        "min": 5.391077138483524e-06,
-        "max": 2.719664389034733,
-        "p0.1": 5.726283416152001e-06,
-        "p1": 6.016367115080356e-06,
-        "p5": 6.4229825511574745e-06,
-        "p10": 6.9229863584041595e-06,
-        "p25": 1.3229087926447392e-05,
-        "median": 0.016796045005321503,
-        "p75": 0.023097115103155375,
-        "p90": 0.04397575499024242,
-        "p95": 0.10230799100827426,
-        "p99": 0.5685234974371277,
-        "p99.9": 1.0416468969639392
+        "mean": 0.022424794095301383,
+        "min": 0.0,
+        "max": 2.2496761339716613,
+        "p0.1": 5.86037605535239e-06,
+        "p1": 6.1229802668094635e-06,
+        "p5": 6.572570418938994e-06,
+        "p10": 7.1711605414748195e-06,
+        "p25": 1.3814453268423676e-05,
+        "median": 0.015076198033057153,
+        "p75": 0.02169954893179238,
+        "p90": 0.041845823090989144,
+        "p95": 0.0691316702053882,
+        "p99": 0.25877736731432377,
+        "p99.9": 0.8826889323565585
       }
     },
     "throughput": {
-      "input_tokens_per_sec": 11761.577143639186,
-      "output_tokens_per_sec": 214.5201239770749,
-      "total_tokens_per_sec": 11976.097267616262,
-      "requests_per_sec": 1.0963271019423355,
+      "input_tokens_per_sec": 13332.460095651815,
+      "output_tokens_per_sec": 237.28045969107833,
+      "total_tokens_per_sec": 13569.740555342894,
+      "requests_per_sec": 1.119247451373011,
       "images_per_sec": 0.0,
       "videos_per_sec": 0.0,
       "audios_per_sec": 0.0
     },
     "request_size_bytes": {
-      "mean": 43012.701492537315,
+      "mean": 47718.26388888889,
       "min": 1697.0,
-      "max": 159402.0,
-      "p0.1": 1697.528,
-      "p1": 1702.28,
-      "p5": 1739.9,
-      "p10": 1807.6,
-      "p25": 1944.0,
-      "median": 2803.0,
-      "p75": 78505.0,
-      "p90": 129869.39999999997,
-      "p95": 151211.0,
-      "p99": 158044.38,
-      "p99.9": 159266.238
+      "max": 162623.0,
+      "p0.1": 1697.568,
+      "p1": 1702.68,
+      "p5": 1745.65,
+      "p10": 1809.5,
+      "p25": 1963.25,
+      "median": 3624.0,
+      "p75": 86032.75,
+      "p90": 145860.9,
+      "p95": 153112.75,
+      "p99": 160173.50000000003,
+      "p99.9": 162378.05000000002
     },
     "image": {
       "count": {
@@ -192,80 +192,80 @@
       "bytes": null
     },
     "prompt_tokens": {
-      "total": 718787.0,
+      "total": 857663.0,
       "cached": 0.0,
-      "uncached": 718787.0,
-      "mean": 10728.164179104477,
+      "uncached": 857663.0,
+      "mean": 11911.986111111111,
       "min": 408.0,
-      "max": 39753.0,
-      "p0.1": 408.066,
-      "p1": 408.66,
-      "p5": 413.8,
-      "p10": 425.0,
-      "p25": 443.5,
-      "median": 676.0,
-      "p75": 19241.0,
-      "p90": 32448.39999999999,
-      "p95": 37713.4,
-      "p99": 39595.26,
-      "p99.9": 39737.226
+      "max": 40329.0,
+      "p0.1": 408.071,
+      "p1": 408.71,
+      "p5": 415.3,
+      "p10": 425.1,
+      "p25": 450.5,
+      "median": 870.5,
+      "p75": 21394.75,
+      "p90": 36700.0,
+      "p95": 38037.25,
+      "p99": 39920.04,
+      "p99.9": 40288.104
     },
     "output_len": {
-      "mean": 195.67164179104478,
+      "mean": 212.0,
       "min": 12.0,
-      "max": 1010.0,
-      "p0.1": 12.132,
-      "p1": 13.32,
+      "max": 1310.0,
+      "p0.1": 12.142,
+      "p1": 13.42,
       "p5": 19.0,
-      "p10": 20.6,
+      "p10": 21.0,
       "p25": 24.0,
-      "median": 28.0,
-      "p75": 365.0,
-      "p90": 603.6,
-      "p95": 752.1999999999995,
-      "p99": 923.5400000000004,
-      "p99.9": 1001.3540000000015
+      "median": 30.0,
+      "p75": 358.0,
+      "p90": 605.6,
+      "p95": 801.7,
+      "p99": 1097.0000000000018,
+      "p99.9": 1288.7000000000007
     },
     "output_tokens": {
-      "total": 13110.0,
-      "mean": 195.67164179104478,
+      "total": 15264.0,
+      "mean": 212.0,
       "min": 12.0,
-      "max": 1010.0,
-      "p0.1": 12.132,
-      "p1": 13.32,
+      "max": 1310.0,
+      "p0.1": 12.142,
+      "p1": 13.42,
       "p5": 19.0,
-      "p10": 20.6,
+      "p10": 21.0,
       "p25": 24.0,
-      "median": 28.0,
-      "p75": 365.0,
-      "p90": 603.6,
-      "p95": 752.1999999999995,
-      "p99": 923.5400000000004,
-      "p99.9": 1001.3540000000015
+      "median": 30.0,
+      "p75": 358.0,
+      "p90": 605.6,
+      "p95": 801.7,
+      "p99": 1097.0000000000018,
+      "p99.9": 1288.7000000000007
     },
-    "token_count_mismatches": 1,
+    "token_count_mismatches": 0,
     "client_fallback_requests": {
       "prompt": 0,
       "output": 0
     }
   },
   "failures": {
-    "count": 67,
+    "count": 69,
     "request_latency": {
-      "mean": 3.496212200173038,
-      "min": 0.11273366899695247,
-      "max": 12.000456859008409,
-      "p0.1": 0.11360389906144701,
-      "p1": 0.12143596964189783,
-      "p5": 0.2215295289992355,
-      "p10": 0.628882496454753,
-      "p25": 0.9976973289740272,
-      "median": 2.3788915909826756,
-      "p75": 3.9507538289763033,
-      "p90": 10.627322710445151,
-      "p95": 11.647271139314398,
-      "p99": 11.835654369238766,
-      "p99.9": 11.983976610031448
+      "mean": 2.4553841231053397,
+      "min": 0.08105443906970322,
+      "max": 5.322164512006566,
+      "p0.1": 0.08130567703628913,
+      "p1": 0.08356681873556226,
+      "p5": 0.09666348460596055,
+      "p10": 0.1288049374241382,
+      "p25": 1.0781035739928484,
+      "median": 2.816249781055376,
+      "p75": 3.330375593039207,
+      "p90": 4.159650503401646,
+      "p95": 4.734289207449183,
+      "p99": 4.999455845714543,
+      "p99.9": 5.289893645377365
     },
     "prompt_tokens": {
       "total": 0.0,
@@ -288,7 +288,7 @@
     },
     "by_label": {
       "400 - Context Window": {
-        "count": 67,
+        "count": 69,
         "messages": [
           {
             "message": "This model's maximum context length is 40960 tokens. However, you requested 301 output tokens and your prompt contains at least 40660 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40660)",
@@ -309,9 +309,9 @@
             ]
           },
           {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 325 output tokens and your prompt contains at least 40636 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40636)",
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 264 output tokens and your prompt contains at least 40697 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40697)",
             "session_ids": [
-              "wekatrace16_146f199fbf17eb44217390f0c78403ad7b28"
+              "wekatrace36_2bd142b453ec0a0dd185b346d7a545a19fde"
             ]
           },
           {
@@ -321,69 +321,9 @@
             ]
           },
           {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 264 output tokens and your prompt contains at least 40697 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40697)",
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 325 output tokens and your prompt contains at least 40636 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40636)",
             "session_ids": [
-              "wekatrace36_2bd142b453ec0a0dd185b346d7a545a19fde"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 274 output tokens and your prompt contains at least 40687 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40687)",
-            "session_ids": [
-              "wekatrace11_10454fdbb1be3085822cd83a7480ad3fd966"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 205 output tokens and your prompt contains at least 40756 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40756)",
-            "session_ids": [
-              "wekatrace4_0af3e551f4b5f408f6f5fd060efc0fda2a02"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 1661 output tokens and your prompt contains at least 39300 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=39300)",
-            "session_ids": [
-              "wekatrace49_4351395b62267e84fec3f9627ad5d7c8e661"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 299 output tokens and your prompt contains at least 40662 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40662)",
-            "session_ids": [
-              "wekatrace58_4c37030460d8ba276f386b184047fdd3b74b"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 396 output tokens and your prompt contains at least 40565 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40565)",
-            "session_ids": [
-              "wekatrace26_193ce146ffc9b37a84fcf80fb8d3b659847e"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 309 output tokens and your prompt contains at least 40652 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40652)",
-            "session_ids": [
-              "wekatrace53_47e47b925291dc8c5ac920709679b2e899d9"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 295 output tokens and your prompt contains at least 40666 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40666)",
-            "session_ids": [
-              "wekatrace6_0c80f810ee39c9ff7fd1da753062021f61ca"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 41 output tokens and your prompt contains at least 40920 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40920)",
-            "session_ids": [
-              "wekatrace32_27742d9003b9f77c072d5afe2af76df8b1f7"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 300 output tokens and your prompt contains at least 40661 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40661)",
-            "session_ids": [
-              "wekatrace20_167a3c73a8aa1169b9d98e883ab000ab1826"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 348 output tokens and your prompt contains at least 40613 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40613)",
-            "session_ids": [
-              "wekatrace61_501ec4f4015d1ea79f5de5fb14bf5c7577f8"
+              "wekatrace16_146f199fbf17eb44217390f0c78403ad7b28"
             ]
           },
           {
@@ -393,9 +333,21 @@
             ]
           },
           {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 306 output tokens and your prompt contains at least 40655 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40655)",
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 446 output tokens and your prompt contains at least 40515 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40515)",
             "session_ids": [
-              "wekatrace13_114caff5ae26431a7280b52adfdf333c69ec"
+              "wekatrace48_421f2219530c4734c783b4cf49c5e9806d60"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 274 output tokens and your prompt contains at least 40687 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40687)",
+            "session_ids": [
+              "wekatrace11_10454fdbb1be3085822cd83a7480ad3fd966"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 1661 output tokens and your prompt contains at least 39300 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=39300)",
+            "session_ids": [
+              "wekatrace49_4351395b62267e84fec3f9627ad5d7c8e661"
             ]
           },
           {
@@ -417,28 +369,33 @@
             ]
           },
           {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 243 output tokens and your prompt contains at least 40718 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40718)",
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 41 output tokens and your prompt contains at least 40920 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40920)",
             "session_ids": [
-              "wekatrace24_1760482da06c6c0eb509f656b5dc1b85633b"
+              "wekatrace32_27742d9003b9f77c072d5afe2af76df8b1f7"
             ]
           },
           {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 175 output tokens and your prompt contains at least 40786 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40786)",
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 306 output tokens and your prompt contains at least 40655 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40655)",
             "session_ids": [
-              "wekatrace33_28b69823ae378d0e5d7e528eccc4882d97de",
-              "wekatrace50_442197e4bf141898d030a6a71bb8cf92c1a7"
+              "wekatrace13_114caff5ae26431a7280b52adfdf333c69ec"
             ]
           },
           {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 329 output tokens and your prompt contains at least 40632 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40632)",
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 295 output tokens and your prompt contains at least 40666 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40666)",
             "session_ids": [
-              "wekatrace22_17056d6020606731604880dac05e3714b1f7"
+              "wekatrace6_0c80f810ee39c9ff7fd1da753062021f61ca"
             ]
           },
           {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 239 output tokens and your prompt contains at least 40722 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40722)",
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 348 output tokens and your prompt contains at least 40613 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40613)",
             "session_ids": [
-              "wekatrace44_3e4b2538a9673b37ceafe29f02fde59d0c71"
+              "wekatrace61_501ec4f4015d1ea79f5de5fb14bf5c7577f8"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 299 output tokens and your prompt contains at least 40662 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40662)",
+            "session_ids": [
+              "wekatrace58_4c37030460d8ba276f386b184047fdd3b74b"
             ]
           },
           {
@@ -448,21 +405,22 @@
             ]
           },
           {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 598 output tokens and your prompt contains at least 40363 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40363)",
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 817 output tokens and your prompt contains at least 40144 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40144)",
             "session_ids": [
-              "wekatrace30_20db7dda08521d626fec9d80422a08499dcb"
+              "wekatrace18_1609d2ebd6b9b98b5f689dd966bf471f34d8"
             ]
           },
           {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 254 output tokens and your prompt contains at least 40707 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40707)",
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 396 output tokens and your prompt contains at least 40565 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40565)",
             "session_ids": [
-              "wekatrace9_0fbcd81b70613cb62405d69776f6c2932e8f"
+              "wekatrace26_193ce146ffc9b37a84fcf80fb8d3b659847e"
             ]
           },
           {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 1552 output tokens and your prompt contains at least 39409 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=39409)",
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 322 output tokens and your prompt contains at least 40639 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40639)",
             "session_ids": [
-              "wekatrace2_00f4cc77fc2de6713521dad5f0066c6a051a"
+              "wekatrace40_357d97a3524945e67b60ccc36f9ad415a8c2",
+              "wekatrace62_5102100edde3bfe3bc127cb0fbe5ddb373c3"
             ]
           },
           {
@@ -472,83 +430,15 @@
             ]
           },
           {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 193 output tokens and your prompt contains at least 40768 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40768)",
-            "session_ids": [
-              "wekatrace54_4aca7bd571ce3444687ed29432435ff5ab40"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 146 output tokens and your prompt contains at least 40815 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40815)",
-            "session_ids": [
-              "wekatrace0_009dfc4e83422be8d3daa41cfda78036b2cd"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 322 output tokens and your prompt contains at least 40639 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40639)",
-            "session_ids": [
-              "wekatrace62_5102100edde3bfe3bc127cb0fbe5ddb373c3",
-              "wekatrace40_357d97a3524945e67b60ccc36f9ad415a8c2"
-            ]
-          },
-          {
             "message": "This model's maximum context length is 40960 tokens. However, you requested 5179 output tokens and your prompt contains at least 35782 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=35782)",
             "session_ids": [
               "wekatrace19_1671dfe595d47ce4cef0fd9dcc8a6582dfbb"
             ]
           },
           {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 250 output tokens and your prompt contains at least 40711 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40711)",
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 254 output tokens and your prompt contains at least 40707 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40707)",
             "session_ids": [
-              "wekatrace34_2b299c067fd421bd939e10579d197702d62c"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 280 output tokens and your prompt contains at least 40681 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40681)",
-            "session_ids": [
-              "wekatrace57_4bbdebc00cf9aa052ab7b5a7955f440e5493"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 262 output tokens and your prompt contains at least 40699 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40699)",
-            "session_ids": [
-              "wekatrace63_5326f3c3937465f15c25c3bcd7c0fcf77de8"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 397 output tokens and your prompt contains at least 40564 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40564)",
-            "session_ids": [
-              "wekatrace60_4fe00cd35580ba0e71a6aba7951658ed825b"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 393 output tokens and your prompt contains at least 40568 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40568)",
-            "session_ids": [
-              "wekatrace10_10110fc7a870314216111e47f3d1300df5d3"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 131 output tokens and your prompt contains at least 40830 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40830)",
-            "session_ids": [
-              "wekatrace5_0b1825a4864ed8e4f4a14c43d34b634462ae"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 172 output tokens and your prompt contains at least 40789 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40789)",
-            "session_ids": [
-              "wekatrace12_10f4a17d5dadb7c65175f0be58aae0ef5317"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 424 output tokens and your prompt contains at least 40537 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40537)",
-            "session_ids": [
-              "wekatrace52_467a348065e65ccae574c7909c522beb279a",
-              "wekatrace39_346d805667aef63de957305022d43dd57a67"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 556 output tokens and your prompt contains at least 40405 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40405)",
-            "session_ids": [
-              "wekatrace28_19b860c061d571eef35b87aa66047e6ae74c"
+              "wekatrace9_0fbcd81b70613cb62405d69776f6c2932e8f"
             ]
           },
           {
@@ -558,75 +448,22 @@
             ]
           },
           {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 817 output tokens and your prompt contains at least 40144 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40144)",
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 175 output tokens and your prompt contains at least 40786 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40786)",
             "session_ids": [
-              "wekatrace18_1609d2ebd6b9b98b5f689dd966bf471f34d8"
+              "wekatrace50_442197e4bf141898d030a6a71bb8cf92c1a7",
+              "wekatrace33_28b69823ae378d0e5d7e528eccc4882d97de"
             ]
           },
           {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 179 output tokens and your prompt contains at least 40782 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40782)",
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 598 output tokens and your prompt contains at least 40363 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40363)",
             "session_ids": [
-              "wekatrace55_4b0c7aa7fe9d77aefa2b59a763dc917a78e7"
+              "wekatrace30_20db7dda08521d626fec9d80422a08499dcb"
             ]
           },
           {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 457 output tokens and your prompt contains at least 40504 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40504)",
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 329 output tokens and your prompt contains at least 40632 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40632)",
             "session_ids": [
-              "wekatrace17_155fca8f24b67a1265a0ea3fa24c4ed8afa8"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 230 output tokens and your prompt contains at least 40731 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40731)",
-            "session_ids": [
-              "wekatrace27_19ac40f53eddc7c0b47b95f69a8ff19a7b22"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 727 output tokens and your prompt contains at least 40234 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40234)",
-            "session_ids": [
-              "wekatrace38_30c1582c247164b2fae4b0ba9d8c49a70663"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 408 output tokens and your prompt contains at least 40553 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40553)",
-            "session_ids": [
-              "wekatrace14_11f1732c8df4d71de9ee3e7330e71a699fe8"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 154 output tokens and your prompt contains at least 40807 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40807)",
-            "session_ids": [
-              "wekatrace37_2f7abb00530bb35037c045eae6191f585bde"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 257 output tokens and your prompt contains at least 40704 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40704)",
-            "session_ids": [
-              "wekatrace35_2b51f13bb39d17e893ce983b9ec7e035b893"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 277 output tokens and your prompt contains at least 40684 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40684)",
-            "session_ids": [
-              "wekatrace8_0e3e0d05df4033ad3442ca6a9e1670a1430d"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 360 output tokens and your prompt contains at least 40601 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40601)",
-            "session_ids": [
-              "wekatrace15_11f5d6df74271e2179125dc5149949d82940"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 265 output tokens and your prompt contains at least 40696 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40696)",
-            "session_ids": [
-              "wekatrace43_3dd0c49752b811fd5375bc40bbab3635da13"
-            ]
-          },
-          {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 986 output tokens and your prompt contains at least 39975 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=39975)",
-            "session_ids": [
-              "wekatrace51_44fbff8adeb6cbef7d62d6ecf4bee9b8611d"
+              "wekatrace22_17056d6020606731604880dac05e3714b1f7"
             ]
           },
           {
@@ -636,9 +473,58 @@
             ]
           },
           {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 1008 output tokens and your prompt contains at least 39953 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=39953)",
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 393 output tokens and your prompt contains at least 40568 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40568)",
             "session_ids": [
-              "wekatrace56_4ba5d5fa4198ccf69882db037a73b7ec2581"
+              "wekatrace10_10110fc7a870314216111e47f3d1300df5d3"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 239 output tokens and your prompt contains at least 40722 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40722)",
+            "session_ids": [
+              "wekatrace44_3e4b2538a9673b37ceafe29f02fde59d0c71"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 424 output tokens and your prompt contains at least 40537 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40537)",
+            "session_ids": [
+              "wekatrace39_346d805667aef63de957305022d43dd57a67",
+              "wekatrace52_467a348065e65ccae574c7909c522beb279a"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 257 output tokens and your prompt contains at least 40704 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40704)",
+            "session_ids": [
+              "wekatrace35_2b51f13bb39d17e893ce983b9ec7e035b893"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 280 output tokens and your prompt contains at least 40681 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40681)",
+            "session_ids": [
+              "wekatrace57_4bbdebc00cf9aa052ab7b5a7955f440e5493"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 193 output tokens and your prompt contains at least 40768 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40768)",
+            "session_ids": [
+              "wekatrace54_4aca7bd571ce3444687ed29432435ff5ab40"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 205 output tokens and your prompt contains at least 40756 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40756)",
+            "session_ids": [
+              "wekatrace4_0af3e551f4b5f408f6f5fd060efc0fda2a02"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 556 output tokens and your prompt contains at least 40405 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40405)",
+            "session_ids": [
+              "wekatrace28_19b860c061d571eef35b87aa66047e6ae74c"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 243 output tokens and your prompt contains at least 40718 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40718)",
+            "session_ids": [
+              "wekatrace24_1760482da06c6c0eb509f656b5dc1b85633b"
             ]
           },
           {
@@ -648,15 +534,123 @@
             ]
           },
           {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 3008 output tokens and your prompt contains at least 37953 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=37953)",
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 172 output tokens and your prompt contains at least 40789 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40789)",
             "session_ids": [
-              "wekatrace26_193ce146ffc9b37a84fcf80fb8d3b659847e"
+              "wekatrace12_10f4a17d5dadb7c65175f0be58aae0ef5317"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 360 output tokens and your prompt contains at least 40601 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40601)",
+            "session_ids": [
+              "wekatrace15_11f5d6df74271e2179125dc5149949d82940"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 1552 output tokens and your prompt contains at least 39409 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=39409)",
+            "session_ids": [
+              "wekatrace2_00f4cc77fc2de6713521dad5f0066c6a051a"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 408 output tokens and your prompt contains at least 40553 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40553)",
+            "session_ids": [
+              "wekatrace14_11f1732c8df4d71de9ee3e7330e71a699fe8"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 146 output tokens and your prompt contains at least 40815 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40815)",
+            "session_ids": [
+              "wekatrace0_009dfc4e83422be8d3daa41cfda78036b2cd"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 250 output tokens and your prompt contains at least 40711 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40711)",
+            "session_ids": [
+              "wekatrace34_2b299c067fd421bd939e10579d197702d62c"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 397 output tokens and your prompt contains at least 40564 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40564)",
+            "session_ids": [
+              "wekatrace60_4fe00cd35580ba0e71a6aba7951658ed825b"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 277 output tokens and your prompt contains at least 40684 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40684)",
+            "session_ids": [
+              "wekatrace8_0e3e0d05df4033ad3442ca6a9e1670a1430d"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 457 output tokens and your prompt contains at least 40504 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40504)",
+            "session_ids": [
+              "wekatrace17_155fca8f24b67a1265a0ea3fa24c4ed8afa8"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 1008 output tokens and your prompt contains at least 39953 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=39953)",
+            "session_ids": [
+              "wekatrace56_4ba5d5fa4198ccf69882db037a73b7ec2581"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 727 output tokens and your prompt contains at least 40234 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40234)",
+            "session_ids": [
+              "wekatrace38_30c1582c247164b2fae4b0ba9d8c49a70663"
             ]
           },
           {
             "message": "This model's maximum context length is 40960 tokens. However, you requested 610 output tokens and your prompt contains at least 40351 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40351)",
             "session_ids": [
               "wekatrace46_3f86b38dc1cb54cc18568369a619534606a5"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 3008 output tokens and your prompt contains at least 37953 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=37953)",
+            "session_ids": [
+              "wekatrace26_193ce146ffc9b37a84fcf80fb8d3b659847e"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 265 output tokens and your prompt contains at least 40696 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40696)",
+            "session_ids": [
+              "wekatrace43_3dd0c49752b811fd5375bc40bbab3635da13"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 154 output tokens and your prompt contains at least 40807 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40807)",
+            "session_ids": [
+              "wekatrace37_2f7abb00530bb35037c045eae6191f585bde"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 230 output tokens and your prompt contains at least 40731 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40731)",
+            "session_ids": [
+              "wekatrace27_19ac40f53eddc7c0b47b95f69a8ff19a7b22"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 131 output tokens and your prompt contains at least 40830 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40830)",
+            "session_ids": [
+              "wekatrace5_0b1825a4864ed8e4f4a14c43d34b634462ae"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 262 output tokens and your prompt contains at least 40699 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40699)",
+            "session_ids": [
+              "wekatrace63_5326f3c3937465f15c25c3bcd7c0fcf77de8"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 300 output tokens and your prompt contains at least 40661 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40661)",
+            "session_ids": [
+              "wekatrace20_167a3c73a8aa1169b9d98e883ab000ab1826"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 309 output tokens and your prompt contains at least 40652 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40652)",
+            "session_ids": [
+              "wekatrace53_47e47b925291dc8c5ac920709679b2e899d9"
             ]
           },
           {
@@ -672,9 +666,27 @@
             ]
           },
           {
-            "message": "This model's maximum context length is 40960 tokens. However, you requested 446 output tokens and your prompt contains at least 40515 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40515)",
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 993 output tokens and your prompt contains at least 39968 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=39968)",
             "session_ids": [
-              "wekatrace48_421f2219530c4734c783b4cf49c5e9806d60"
+              "wekatrace45_3e8ee6f2efde70b177c3e47f447a14d3f5e6"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 179 output tokens and your prompt contains at least 40782 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40782)",
+            "session_ids": [
+              "wekatrace55_4b0c7aa7fe9d77aefa2b59a763dc917a78e7"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 90 output tokens and your prompt contains at least 40871 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=40871)",
+            "session_ids": [
+              "wekatrace45_3e8ee6f2efde70b177c3e47f447a14d3f5e6"
+            ]
+          },
+          {
+            "message": "This model's maximum context length is 40960 tokens. However, you requested 986 output tokens and your prompt contains at least 39975 input tokens, for a total of at least 40961 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=39975)",
+            "session_ids": [
+              "wekatrace51_44fbff8adeb6cbef7d62d6ecf4bee9b8611d"
             ]
           }
         ]

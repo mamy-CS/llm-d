@@ -35,8 +35,8 @@ results:
         units: count
       failed: 64
       input_tokens_per_session:
-        max: 410666.0
-        mean: 11231.046875
+        max: 513588.0
+        mean: 13400.984375
         min: 0.0
         p0p1: 0.0
         p1: 0.0
@@ -47,12 +47,12 @@ results:
         p75: 629.5
         p90: 1195.1000000000008
         p95: 8726.99999999998
-        p99: 294735.2899999995
-        p99p9: 399072.9290000009
+        p99: 355467.4499999994
+        p99p9: 497775.9450000012
         units: count
       output_tokens_per_session:
-        max: 7660.0
-        mean: 204.84375
+        max: 8504.0
+        mean: 238.5
         min: 0.0
         p0p1: 0.0
         p1: 0.0
@@ -63,27 +63,27 @@ results:
         p75: 26.0
         p90: 31.0
         p95: 33.849999999999994
-        p99: 5490.279999999992
-        p99p9: 7443.028000000017
+        p99: 6627.859999999992
+        p99p9: 8316.386000000013
         units: count
       session_duration:
-        max: 51.85317945480347
-        mean: 14.388471655547619
-        min: 0.6149032115936279
-        p0p1: 0.6172761747837067
-        p1: 0.6386328434944153
-        p10: 0.912280821800232
-        p25: 12.630384802818298
-        p5: 0.676339340209961
-        p50: 15.407189011573792
-        p75: 16.90591537952423
-        p90: 17.81566436290741
-        p95: 18.712849485874177
-        p99: 42.02265248775478
-        p99p9: 50.87012675809868
+        max: 49.22121977806091
+        mean: 6.602269027382135
+        min: 0.6406521797180176
+        p0p1: 0.6449551703929901
+        p1: 0.6836820864677429
+        p10: 1.0433052062988282
+        p25: 3.150852680206299
+        p5: 0.8037740826606751
+        p50: 5.193558573722839
+        p75: 6.096656918525696
+        p90: 8.226276659965515
+        p95: 21.386143255233733
+        p99: 45.89196442365645
+        p99p9: 48.888294242620496
         units: s
       session_rate:
-        mean: 1.2300010039404778
+        mean: 1.2866791539225244
         units: queries/s
       succeeded: 0
       total: 64
@@ -91,20 +91,20 @@ results:
       total_events_cancelled: 27613
       total_events_completed: 47
 run:
-  cid: d7bdf687-5cb2-57f0-8a0e-be6a0763739a
-  description: inference-perf-1791995050-fxajp2
-  eid: 2f4614a9-42ce-55ff-ba9e-db24f454efc1
-  pid: 894e2522-d9a0-4494-8ebd-f01277d0ec3a
+  cid: 8853448d-05eb-57dd-bfee-2f7a6319edeb
+  description: inference-perf-1791997705-vuwa2d
+  eid: 6877192f-da6c-5fa3-9d77-6b11b170c3dc
+  pid: a63e3857-cc9e-4a4c-8e77-a316180cd680
   time:
-    duration: PT478.615185183S
-    end: '2026-10-14T16:32:20Z'
-    start: '2026-10-14T16:24:21Z'
-  uid: 775cc364-ac43-4389-97db-cbb869dbe889
+    duration: PT395.869030343S
+    end: '2026-10-14T17:18:09Z'
+    start: '2026-10-14T17:11:32Z'
+  uid: 090a0f45-ec6e-48a9-96c9-19b3c15adb11
   user: namespace=llm-d-optimized-baseline
 scenario:
   load:
     metadata:
-      cfg_id: f9935af514ac19434e860193fe257816ebf844fdffbd31f0dc407166ed848574
+      cfg_id: 314dbe7217fdbb23b3a23322dfef5a9903a166fabd7697ec75ad85aec3232d35
       schema_version: 0.0.1
     native:
       args:
@@ -146,13 +146,13 @@ scenario:
           type: vllm
         storage:
           local_storage:
-            path: /requests/inference-perf-1791995050-fxajp2_1
+            path: /requests/inference-perf-1791997705-vuwa2d_1
         tokenizer:
           pretrained_model_name_or_path: Qwen/Qwen3-32B
     standardized:
       input_seq_len:
         distribution: other
-        value: 11231.046875
+        value: 13400.984375
       multi_turn:
         enabled: true
       parallelism: 1

@@ -13,15 +13,23 @@ the shipped keda+epp QUEUE-path autoscaler on the Qwen3-32B optimized-baseline s
   scaleUp window 300s (as-shipped).
 - Harness: llm-d-benchmark `llmdbenchmark` 0.8.0 on current `main` (f0182f9), Python 3.14 venv.
 
-## Result
-| Metric | Value |
-|--------|-------|
-| Requests | 134 total: **67 succeeded / 67 failed (50%)** |
-| Failure cause | **100% "400 - Context Window"** - prompt ~40,660 input tokens + output > 40,960 ceiling |
-| Successful prompt tokens | mean 10,728 / max 39,753 (just under 40,960) |
-| Successful output tokens | mean 196 |
-| Successful TTFT | mean 7.82s / p95 12.85s (heavy prefill) |
-| Autoscaler behavior | **Never scaled - held at 1 replica the whole run** |
+## Result (two runs, reproduced)
+| Metric | Run 1 | Run 2 (with EPP signal trace) |
+|--------|-------|------|
+| Requests | 134: **67 ok / 67 failed (50%)** | 141: **72 ok / 69 failed (49%)** |
+| Failure cause | **100% "400 - Context Window"** | **100% "400 - Context Window"** |
+| Successful prompt tokens | mean 10,728 / max 39,753 | similar |
+| Successful TTFT | mean 7.82s / p95 12.85s | mean 1.22s / p95 2.79s |
+| Autoscaler | held at 1 replica | held at 1 replica |
+
+EPP running-signal trace (run 2, 5s sampling, 78 samples): nonzero only **12%** of samples, exceeded the
+running=16 threshold in exactly **1 sample (~5s)**, peak **50**, mean 1.2. Longest consecutive
+above-threshold stretch = **5s** vs the **300s** scaleUp window. So the signal is not dead - it spikes -
+but the agentic load is **bursty and never sustains**, and the 300s window correctly absorbs the transient.
+
+Exact failure message (verbatim from the report):
+> "This model's maximum context length is 40960 tokens. However, you requested 301 output tokens and
+> your prompt contains at least 40660 input tokens, for a total of at least 40961 tokens."
 
 Exact failure message (verbatim from the report):
 > "This model's maximum context length is 40960 tokens. However, you requested 301 output tokens and
@@ -32,18 +40,23 @@ Exact failure message (verbatim from the report):
    traces reach ~1.3M input tokens (the harness logged `1306158 > 131072`); even after the harness caps
    context toward ~40K, ~half still tip just over the 40,960 ceiling. Running the real AgentX workload
    needs a long-context model/stack (e.g. the GLM-5.2 guide runs it at 142K-10M context).
-2. **The queue/count signal is unresponsive to agentic load.** The pool stayed at 1 replica the entire
-   run - failures don't register as running requests, and the surviving large-prefill requests didn't
-   drive the count past the running=16 / queue=1 thresholds. A count-based signal does not reflect the
-   token/prefill work an agentic request carries (one in-context request alone is a large fraction of a
-   replica's KV). This points to the token-aware signal for agentic/long-context load.
+2. **The queue/count signal + 300s window can't react to bursty agentic load.** The pool held at 1
+   replica both runs. The EPP running signal DID spike (to 50), but only transiently: above the
+   running=16 threshold for ~5s total out of the whole run, and nonzero only 12% of samples. Against a
+   300s stabilization window, these sub-10s bursts are (correctly) absorbed - so the pool never scales.
+   The agentic session-replay pattern is spiky (requests fire, ~half 400 instantly, brief concurrency
+   bursts) rather than the sustained ramp the count-signal + window are tuned for. Also, a count target
+   (running=16) does not reflect the token/prefill work an agentic request carries. Both point to the
+   token-aware signal (tokens of outstanding work) for agentic/long-context load.
 
 ## Caveats
 - This is an INSPECTION at native session pacing (64 sessions), not a tuned autoscaled-vs-static protocol.
-- The scaling conclusion is from `kube_deployment ready=1` (reliable); the per-second EPP `request_running`
-  trace for this run was not captured (the recorder's metric-scrape helper did not collect it).
-- Reproducible artifacts in `data/` (BRV0.2 stage + session reports, summary with the 67/67 + failure
-  messages, run metadata). The run also auto-deployed an in-namespace prism instance with this data.
+- Run 1's EPP `request_running` trace was not captured (the scrape helper pod had expired); run 2 fixed
+  that and captured it (data/rec-weka.csv) - the scaling conclusion is confirmed by both `ready=1` and
+  the EPP trace.
+- Reproducible artifacts in `data/` (BRV0.2 stage + session reports, summary with the served/400 split +
+  verbatim failure messages, run metadata, and the run-2 EPP signal trace rec-weka.csv). The run also
+  auto-deployed an in-namespace prism instance with this data.
 
 ## So what
 Confirms the team's assumptions: (a) AgentX belongs on a long-context stack, not Qwen3-32B; (b) the
