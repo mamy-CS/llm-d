@@ -1,0 +1,199 @@
+results:
+  session_performance:
+    sessions:
+      events_cancelled_per_session:
+        max: 6690.0
+        mean: 431.453125
+        min: 19.0
+        p0p1: 19.063
+        p1: 19.63
+        p10: 43.60000000000001
+        p25: 72.25
+        p5: 31.15
+        p50: 142.0
+        p75: 301.75
+        p90: 741.0000000000002
+        p95: 1049.5499999999993
+        p99: 5424.3299999999945
+        p99p9: 6563.433000000009
+        units: count
+      events_per_session:
+        max: 6696.0
+        mean: 433.1875
+        min: 20.0
+        p0p1: 20.126
+        p1: 21.26
+        p10: 45.30000000000001
+        p25: 74.25
+        p5: 33.0
+        p50: 143.5
+        p75: 303.75
+        p90: 742.3000000000002
+        p95: 1051.5499999999993
+        p99: 5427.809999999995
+        p99p9: 6569.18100000001
+        units: count
+      failed: 64
+      input_tokens_per_session:
+        max: 410666.0
+        mean: 11231.046875
+        min: 0.0
+        p0p1: 0.0
+        p1: 0.0
+        p10: 0.0
+        p25: 0.0
+        p5: 0.0
+        p50: 434.0
+        p75: 629.5
+        p90: 1195.1000000000008
+        p95: 8726.99999999998
+        p99: 294735.2899999995
+        p99p9: 399072.9290000009
+        units: count
+      output_tokens_per_session:
+        max: 7660.0
+        mean: 204.84375
+        min: 0.0
+        p0p1: 0.0
+        p1: 0.0
+        p10: 0.0
+        p25: 0.0
+        p5: 0.0
+        p50: 22.0
+        p75: 26.0
+        p90: 31.0
+        p95: 33.849999999999994
+        p99: 5490.279999999992
+        p99p9: 7443.028000000017
+        units: count
+      session_duration:
+        max: 51.85317945480347
+        mean: 14.388471655547619
+        min: 0.6149032115936279
+        p0p1: 0.6172761747837067
+        p1: 0.6386328434944153
+        p10: 0.912280821800232
+        p25: 12.630384802818298
+        p5: 0.676339340209961
+        p50: 15.407189011573792
+        p75: 16.90591537952423
+        p90: 17.81566436290741
+        p95: 18.712849485874177
+        p99: 42.02265248775478
+        p99p9: 50.87012675809868
+        units: s
+      session_rate:
+        mean: 1.2300010039404778
+        units: queries/s
+      succeeded: 0
+      total: 64
+      total_events: 27724
+      total_events_cancelled: 27613
+      total_events_completed: 47
+run:
+  cid: d7bdf687-5cb2-57f0-8a0e-be6a0763739a
+  description: inference-perf-1791995050-fxajp2
+  eid: 2f4614a9-42ce-55ff-ba9e-db24f454efc1
+  pid: 894e2522-d9a0-4494-8ebd-f01277d0ec3a
+  time:
+    duration: PT478.615185183S
+    end: '2026-10-14T16:32:20Z'
+    start: '2026-10-14T16:24:21Z'
+  uid: 775cc364-ac43-4389-97db-cbb869dbe889
+  user: namespace=llm-d-optimized-baseline
+scenario:
+  load:
+    metadata:
+      cfg_id: f9935af514ac19434e860193fe257816ebf844fdffbd31f0dc407166ed848574
+      schema_version: 0.0.1
+    native:
+      args:
+        workload: weka_traces.yaml
+      config:
+        api:
+          session_id_header_key: x-llm-d-inference-fairness-id
+          streaming: true
+          type: chat
+        data:
+          type: weka_trace_replay
+          weka_trace_replay:
+            bad_tool_call_handling: use_recorded
+            default_block_size: 64
+            hf_dataset_path: semianalysisai/cc-traces-weka-with-subagents-051926
+            num_dataset_entries: 64
+            predecessor_wait_timeout_sec: 0
+            skip_invalid_files: true
+            static_model_name: Qwen/Qwen3-32B
+            trace_idle_gap_cap_seconds: 1.0
+            use_static_model: true
+        load:
+          base_seed: 42
+          stages:
+          - concurrent_sessions: 64
+            num_sessions: 64
+            timeout: 300
+          type: trace_session_replay
+          worker_max_concurrency: 10000
+        report:
+          request_lifecycle:
+            per_request: true
+            per_stage: true
+            summary: true
+        server:
+          base_url: http://<epp-service-clusterip>
+          ignore_eos: true
+          model_name: Qwen/Qwen3-32B
+          type: vllm
+        storage:
+          local_storage:
+            path: /requests/inference-perf-1791995050-fxajp2_1
+        tokenizer:
+          pretrained_model_name_or_path: Qwen/Qwen3-32B
+    standardized:
+      input_seq_len:
+        distribution: other
+        value: 11231.046875
+      multi_turn:
+        enabled: true
+      parallelism: 1
+      source: unknown
+      stage: 0
+      tool: inference-perf
+      tool_version: v0.7.0
+  stack:
+  - metadata:
+      cfg_id: 16c0d563b61c6a0a42e93b5b09a5994db4ab86017d1944d93c85c2dd9f95e420
+      label: ''
+      schema_version: 0.0.1
+    native:
+      args: {}
+      envars: {}
+    standardized:
+      accelerator:
+        count: 1
+        model: NVIDIA-H100-80GB-HBM3
+        parallelism:
+          dp: 1
+          dp_local: 1
+          ep: 1
+          pp: 1
+          tp: 1
+          workers: 1
+      kind: inference_engine
+      model:
+        name: Qwen/Qwen3-32B
+      replicas: 1
+      role: decode
+      tool: ''
+      tool_version: '//:'
+  - metadata:
+      cfg_id: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+      label: Inference Scheduler (EPP)
+      schema_version: 0.0.1
+    native:
+      config: {}
+    standardized:
+      kind: generic
+      tool: inference_scheduler
+      tool_version: ''
+version: 0.2.1

@@ -8,6 +8,13 @@ Methodology + reusable harness: [`../benchmark-templates/`](../benchmark-templat
 
 ## Runs
 
+### [2026-10-14-agentx-weka-inspection/](2026-10-14-agentx-weka-inspection/)
+Inspection: the SemiAnalysis agentic trace ("AgentX" / `weka_traces` cc-traces) against the keda+epp
+queue path on Qwen3-32B. Result: 50% of requests 400 (context overflow - prompts exceed the 40,960
+ceiling) and the autoscaler never scaled (held at 1 replica). AgentX needs a long-context stack, and
+agentic load wants the token-aware signal, not queue/count. See
+[FINDINGS.md](2026-10-14-agentx-weka-inspection/FINDINGS.md).
+
 ### [2026-10-13-autoscaled-vs-static-v2/](2026-10-13-autoscaled-vs-static-v2/)
 Qwen3-32B, TP=2, 2x H100-80GB, vLLM, monolithic. Pre-staged weights, calibrated mid-range operating
 point, open-loop Poisson ramp, goodput-gated (TTFT<=2s, TPOT<=50ms). Three arms: static (pinned 5),
