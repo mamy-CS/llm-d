@@ -130,7 +130,7 @@ router:
               labelSelector: "llm-d.ai/guide=coord-disaggregation"
             revisionGating:
               mode: max-role
-              requiredRoles: [encode, prefill, decode]
+              requiredRoles: [prefill, decode]  # LOCAL PD-only (no encode role)
               # Keep the turns of one session on one revision during a rollout.
               # The default random draw spreads consecutive turns across the old and
               # new revisions, so each switch lands on pods that do not hold the
